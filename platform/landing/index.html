@@ -43,6 +43,12 @@
   .live { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:22px; align-items:center; }
   .live .shots { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory; }
   .live .shots img { width:150px; height:auto; flex:none; border-radius:14px; border:1px solid var(--border); scroll-snap-align:start; }
+  .gallery { display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .platforms { display:flex; gap:6px; }
+  .platforms button { font:inherit; font-size:13px; font-weight:600; border:1px solid var(--border); background:var(--card); color:var(--muted); border-radius:99px; padding:4px 14px; cursor:pointer; }
+  .platforms button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .shots[hidden] { display:none; }
+  .shots-note { font-size:12px; color:var(--muted); margin:0; }
   .badge { font-size:12px; font-weight:600; border-radius:99px; padding:2px 10px; background:var(--tint); color:var(--accent); }
   @media (max-width:760px) { .live { grid-template-columns:minmax(0,1fr); } }
 </style>
@@ -68,16 +74,33 @@
       <h3><span class="lang" style="background:#0f766e">Laravel + Nuxt + Flutter</span>Glowly<span class="status" id="st-glowly"><i></i><span>проверяем…</span></span></h3>
       <p class="what">Онлайн-запись к мастерам красоты: каталог мастеров на карте, свободное время и запись в пару касаний, календарь и клиентская база мастера, аналитика, отзывы и Telegram-бот. Работает в продакшене.</p>
       <p class="who">Сайт, админ-панель и мобильные приложения для iOS и Android (Flutter) — одна система, общий сервер, уведомления в реальном времени.</p>
-      <div class="try"><b>Что посмотреть:</b><ol><li>Найдите мастера на карте и откройте его профиль.</li><li>Выберите услугу — увидите свободные окна и скидки на «тихие» часы.</li><li>Пролистайте скриншоты мобильного приложения справа.</li></ol></div>
+      <div class="try"><b>Что посмотреть:</b><ol><li>Найдите мастера на карте и откройте его профиль.</li><li>Выберите услугу — увидите свободные окна и скидки на «тихие» часы.</li><li>Пролистайте экраны мобильного приложения — для iPhone и Android.</li></ol></div>
       <div class="login">Мобильные приложения: <span class="badge">в тестировании — App Store и Google Play</span></div>
       <div class="tags"><span>Laravel</span><span>Nuxt / Vue</span><span>Flutter</span><span>WebSocket</span><span>PostgreSQL</span><span>Telegram Mini App</span></div>
       <a class="open" href="https://glowly.uz" target="_blank" rel="noopener">Открыть glowly.uz →</a>
     </div>
-    <div class="shots" aria-label="Скриншоты мобильного приложения Glowly">
-      <img src="img/glowly-2_search.jpg" alt="Поиск мастеров на карте" loading="lazy" />
-      <img src="img/glowly-4_booking.jpg" alt="Запись: свободное время онлайн" loading="lazy" />
-      <img src="img/glowly-5_calendar.jpg" alt="Календарь мастера" loading="lazy" />
-      <img src="img/glowly-7_analytics.jpg" alt="Аналитика мастера" loading="lazy" />
+    <div class="gallery">
+      <div class="platforms" role="group" aria-label="Платформа">
+        <button type="button" data-plat="ios" aria-pressed="true">iPhone</button>
+        <button type="button" data-plat="android" aria-pressed="false">Android</button>
+      </div>
+      <div class="shots" data-plat="ios" aria-label="Скриншоты Glowly на iPhone">
+        <img src="img/glowly-ios-2_search.jpg" alt="Поиск мастеров" loading="lazy" />
+        <img src="img/glowly-ios-3_profile.jpg" alt="Профиль мастера и свободное время" loading="lazy" />
+        <img src="img/glowly-ios-4_booking.jpg" alt="Запись: выбор даты и времени" loading="lazy" />
+        <img src="img/glowly-ios-5_calendar.jpg" alt="Календарь мастера" loading="lazy" />
+        <img src="img/glowly-ios-7_analytics.jpg" alt="Финансы и аналитика" loading="lazy" />
+        <img src="img/glowly-ios-8_reviews.jpg" alt="Отзывы клиентов" loading="lazy" />
+      </div>
+      <div class="shots" data-plat="android" aria-label="Скриншоты Glowly на Android" hidden>
+        <img src="img/glowly-android-2_search.jpg" alt="Поиск мастеров" loading="lazy" />
+        <img src="img/glowly-android-3_profile.jpg" alt="Профиль мастера и свободное время" loading="lazy" />
+        <img src="img/glowly-android-4_booking.jpg" alt="Запись: выбор даты и времени" loading="lazy" />
+        <img src="img/glowly-android-5_calendar.jpg" alt="Календарь мастера" loading="lazy" />
+        <img src="img/glowly-android-7_analytics.jpg" alt="Финансы и аналитика" loading="lazy" />
+        <img src="img/glowly-android-8_reviews.jpg" alt="Отзывы клиентов" loading="lazy" />
+      </div>
+      <p class="shots-note">Настоящие экраны приложения (Flutter), снятые на симуляторе iPhone 16 Pro Max и эмуляторе Pixel 9. Листайте вбок.</p>
     </div>
   </article>
 
@@ -137,6 +160,11 @@ document.getElementById('cards').innerHTML = projects.map((p) => `
     </div>
     <p class="api">Все проекты запускаются одной командой в Docker и работают на одном сервере рядом с другими приложениями.</p>
   </article>`;
+
+document.querySelectorAll('.platforms button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.platforms button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll('.shots[data-plat]').forEach((g) => { g.hidden = g.dataset.plat !== b.dataset.plat; });
+}));
 
 async function refresh() {
   try {
