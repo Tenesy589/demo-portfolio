@@ -90,6 +90,39 @@ export function useDeleteCard(boardId: string) {
   return useOptimisticBoard(boardId, (id: string) => api<void>(`/cards/${id}`, { method: 'DELETE' }), removeCard);
 }
 
+export function useRenameBoard(boardId: string) {
+  return useOptimisticBoard(
+    boardId,
+    (title: string) => api(`/boards/${boardId}`, { method: 'PATCH', json: { title } }),
+    (board, title) => ({ ...board, title }),
+  );
+}
+
+export function useDeleteBoard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/boards/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.boards }),
+    onError: () => toast('Не удалось удалить доску', 'error'),
+  });
+}
+
+export function useRenameColumn(boardId: string) {
+  return useOptimisticBoard(
+    boardId,
+    ({ id, title }: { id: string; title: string }) => api(`/columns/${id}`, { method: 'PATCH', json: { title } }),
+    (board, { id, title }) => ({ ...board, columns: board.columns.map((c) => (c.id === id ? { ...c, title } : c)) }),
+  );
+}
+
+export function useDeleteColumn(boardId: string) {
+  return useOptimisticBoard(
+    boardId,
+    (id: string) => api<void>(`/columns/${id}`, { method: 'DELETE' }),
+    (board, id) => ({ ...board, columns: board.columns.filter((c) => c.id !== id) }),
+  );
+}
+
 export function useAddColumn(boardId: string) {
   const qc = useQueryClient();
   return useMutation({

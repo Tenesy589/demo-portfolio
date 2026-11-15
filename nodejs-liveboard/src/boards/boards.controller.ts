@@ -17,7 +17,8 @@ export class BoardsController {
   @Get() list() { return this.boards.list(); }
   @Post() create(@Body() dto: CreateBoardDto, @CurrentUser() u: AuthUser) { return this.boards.create(dto, u); }
   @Get(':id') get(@Param('id') id: string) { return this.boards.get(id); }
-  @Delete(':id') @HttpCode(204) remove(@Param('id') id: string) { return this.boards.remove(id); }
+  @Patch(':id') rename(@Param('id') id: string, @Body() dto: CreateBoardDto, @CurrentUser() u: AuthUser) { return this.boards.rename(id, dto, u); }
+  @Delete(':id') @HttpCode(204) remove(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.boards.remove(id, u); }
 
   @Get(':id/activity')
   activity(@Param('id') id: string, @Query('take') take?: string) {

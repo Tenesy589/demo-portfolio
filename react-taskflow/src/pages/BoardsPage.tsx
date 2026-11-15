@@ -17,7 +17,7 @@ export default function BoardsPage() {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <h1 className="mb-2 text-2xl font-bold">Доски</h1>
-      <p className="mb-6 text-slate-500">Каждая доска — отдельный проект. Откройте «Запуск сайта», чтобы посмотреть, как работает доска, или создайте свою.</p>
+      <p className="mb-6 text-slate-500">Каждая доска — отдельный проект. Откройте «Запуск сайта», чтобы посмотреть, как работает доска, или создайте свою. Переименовать или удалить доску можно внутри неё.</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {isLoading && Array.from({ length: 3 }, (_, i) => <div key={i} className="h-32 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />)}
         {boards?.map((b) => (

@@ -42,8 +42,16 @@ export class BoardsService {
     });
   }
 
-  async remove(id: string) {
+  async rename(id: string, dto: CreateBoardDto, user: AuthUser) {
+    const board = await this.prisma.board.update({ where: { id }, data: { title: dto.title } });
+    this.events.publish({ type: 'board.updated', boardId: id, actor: user, payload: { id, title: board.title } });
+    return board;
+  }
+
+  async remove(id: string, user: AuthUser) {
     await this.prisma.board.delete({ where: { id } });
+    // Delivered to everyone still looking at the board, so their page can leave it.
+    this.events.publish({ type: 'board.deleted', boardId: id, actor: user, payload: { id } });
   }
 
   async addColumn(boardId: string, dto: ColumnDto, user: AuthUser) {

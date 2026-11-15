@@ -47,5 +47,9 @@ export function applyEvent(board: Board, event: BoardEvent): Board {
       return { ...board, columns: board.columns.map((c: Column) => (c.id === event.payload.id ? { ...c, title: event.payload.title } : c)) };
     case 'column.deleted':
       return { ...board, columns: board.columns.filter((c) => c.id !== event.payload.id) };
+    case 'board.updated':
+      return { ...board, title: event.payload.title };
+    case 'board.deleted':
+      return board; // handled by the page: it navigates away
   }
 }

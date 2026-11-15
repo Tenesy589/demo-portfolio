@@ -9,7 +9,9 @@ export type BoardEventType =
   | 'card.deleted'
   | 'column.created'
   | 'column.updated'
-  | 'column.deleted';
+  | 'column.deleted'
+  | 'board.updated'
+  | 'board.deleted';
 
 export interface BoardEvent<T = unknown> {
   type: BoardEventType;

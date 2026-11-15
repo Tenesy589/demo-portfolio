@@ -14,14 +14,16 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { Avatar } from '@/components/Avatar';
 import { CardModal } from '@/components/CardModal';
 import { CardView } from '@/components/CardItem';
 import { ColumnView } from '@/components/ColumnView';
 import { HelpPanel } from '@/components/HelpPanel';
-import { keys, useAddColumn, useBoard, useMoveCard } from '@/hooks/queries';
+import { keys, useAddColumn, useBoard, useDeleteBoard, useMoveCard, useRenameBoard } from '@/hooks/queries';
+import { ConfirmButton } from '@/components/ConfirmButton';
+import { InlineEdit } from '@/components/InlineEdit';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
 import { positionAt, upsertCard } from '@/lib/board-cache';
 import { useAuth } from '@/store/auth';
@@ -37,6 +39,9 @@ export default function BoardPage() {
   const rt = useBoardRealtime(id);
   const move = useMoveCard(id);
   const addColumn = useAddColumn(id);
+  const renameBoard = useRenameBoard(id);
+  const deleteBoard = useDeleteBoard();
+  const navigate = useNavigate();
   const token = useAuth((s) => s.token);
   const [active, setActive] = useState<Card | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -123,7 +128,7 @@ export default function BoardPage() {
     <div className="mx-auto flex max-w-[1600px] flex-col gap-4 p-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link to="/" className="btn-ghost" title="Ко всем доскам">←</Link>
-        <h1 className="text-xl font-bold">{board.title}</h1>
+        <h1 className="text-xl font-bold"><InlineEdit value={board.title} onSave={(t) => renameBoard.mutate(t)} title="Нажмите, чтобы переименовать доску" /></h1>
         <span
           title={rt.connected ? 'Изменения других участников появляются мгновенно' : 'Связь потеряна, переподключаемся'}
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${rt.connected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-500/10 text-slate-500'}`}
@@ -140,6 +145,9 @@ export default function BoardPage() {
         )}
         <button className="btn-ghost" onClick={exportCsv} title="Скачать все карточки таблицей (открывается в Excel)">⬇ Excel / CSV</button>
         <button className="btn-ghost" onClick={() => { const t = prompt('Название новой колонки'); if (t?.trim()) addColumn.mutate(t.trim()); }}>+ Колонка</button>
+        <ConfirmButton confirmText="Удалить доску навсегда?" title="Удалить доску со всеми карточками" onConfirm={() => deleteBoard.mutate(id, { onSuccess: () => navigate('/', { replace: true }) })}>
+          Удалить доску
+        </ConfirmButton>
       </div>
 
       <HelpPanel id="board">
@@ -147,7 +155,8 @@ export default function BoardPage() {
         <ul className="mt-1 list-disc space-y-1 pl-5">
           <li><b>Перетаскивайте карточки</b> мышкой между колонками, чтобы менять статус задачи. На телефоне — нажмите и удерживайте карточку, затем перетащите.</li>
           <li><b>Нажмите на карточку</b>, чтобы изменить название, описание, приоритет или исполнителя.</li>
-          <li><b>«+ Добавить карточку»</b> внизу колонки создаёт новую задачу.</li>
+          <li><b>«+ Добавить карточку»</b> внизу колонки создаёт новую задачу. <b>Удалить карточку</b> — откройте её и нажмите «Удалить».</li>
+          <li><b>Переименовать</b> доску или колонку — нажмите на её название, введите новое и нажмите Enter. <b>✕</b> рядом с названием колонки удаляет её, «Удалить доску» — всю доску (оба действия просят подтверждение).</li>
           <li><b>Совместная работа:</b> откройте эту доску во второй вкладке или на телефоне под другим пользователем (alice@liveboard.dev / demo1234) — все изменения появятся у обоих мгновенно, без перезагрузки.</li>
           <li className="hidden xl:list-item">Справа — <b>история действий</b> команды: кто что изменил.</li>
         </ul>

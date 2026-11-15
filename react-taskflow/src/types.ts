@@ -40,4 +40,6 @@ export type BoardEvent =
   | { type: 'card.created' | 'card.updated' | 'card.moved'; boardId: string; actor: User; payload: Card; at: string }
   | { type: 'card.deleted'; boardId: string; actor: User; payload: { id: string; title: string }; at: string }
   | { type: 'column.created' | 'column.updated'; boardId: string; actor: User; payload: Column; at: string }
-  | { type: 'column.deleted'; boardId: string; actor: User; payload: { id: string }; at: string };
+  | { type: 'column.deleted'; boardId: string; actor: User; payload: { id: string }; at: string }
+  | { type: 'board.updated'; boardId: string; actor: User; payload: { id: string; title: string }; at: string }
+  | { type: 'board.deleted'; boardId: string; actor: User; payload: { id: string }; at: string };

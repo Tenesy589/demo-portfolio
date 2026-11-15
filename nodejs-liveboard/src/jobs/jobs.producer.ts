@@ -22,6 +22,7 @@ export class JobsProducer implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.subscription = this.events.stream().subscribe(async (e) => {
+      if (e.type === 'board.deleted') return;
       const p = e.payload as Record<string, any>;
       await this.activity.add(e.type, {
         boardId: e.boardId,

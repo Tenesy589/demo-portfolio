@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { applyEvent } from '@/lib/board-cache';
 import { getSocket } from '@/lib/socket';
 import { useAuth } from '@/store/auth';
@@ -23,6 +24,7 @@ export interface RealtimeState {
  */
 export function useBoardRealtime(boardId: string): RealtimeState {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { token, user: me } = useAuth();
   const [connected, setConnected] = useState(false);
   const [instance, setInstance] = useState<string | null>(null);
@@ -42,6 +44,12 @@ export function useBoardRealtime(boardId: string): RealtimeState {
     };
     const onEvent = (e: BoardEvent) => {
       if (e.boardId !== boardId) return;
+      if (e.type === 'board.deleted') {
+        if (e.actor.id !== me?.id) toast(`${e.actor.name} удалил(а) эту доску`);
+        qc.invalidateQueries({ queryKey: keys.boards });
+        navigate('/', { replace: true });
+        return;
+      }
       qc.setQueryData<Board>(keys.board(boardId), (b) => (b ? applyEvent(b, e) : b));
       qc.invalidateQueries({ queryKey: keys.activity(boardId) });
       if (e.actor.id !== me?.id && e.type === 'card.created') toast(`${e.actor.name} добавил(а) «${e.payload.title}»`);
@@ -66,7 +74,7 @@ export function useBoardRealtime(boardId: string): RealtimeState {
       socket.emit('board:leave');
       socket.off('connect', join).off('disconnect').off('hello').off('presence', setPresence).off('board:event', onEvent).off('card:editing', onEditing);
     };
-  }, [boardId, token, qc, me?.id]);
+  }, [boardId, token, qc, me?.id, navigate]);
 
   return {
     connected,
