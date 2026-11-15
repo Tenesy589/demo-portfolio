@@ -153,7 +153,7 @@ export default function BoardPage() {
         </ul>
       </HelpPanel>
 
-      <div className="flex min-w-0 gap-6">
+      <div className="flex min-w-0 items-start gap-6">
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={endDrag}>
           <div className="flex min-w-0 flex-1 gap-4 overflow-x-auto pb-4">
             {columns.map((col) => <ColumnView key={col.id} column={col} editing={rt.editing} onOpen={onOpen} />)}

@@ -17,7 +17,7 @@ function ago(iso: string) {
 export function ActivityFeed({ boardId }: { boardId: string }) {
   const { data = [] } = useActivity(boardId);
   return (
-    <aside className="hidden w-72 shrink-0 xl:block">
+    <aside className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] w-72 shrink-0 overflow-y-auto xl:block">
       <h3 className="mb-3 text-sm font-semibold text-slate-500">История действий</h3>
       <ol className="space-y-3">
         {data.length === 0 && <li className="text-sm text-slate-400">Пока пусто — переместите любую карточку</li>}
