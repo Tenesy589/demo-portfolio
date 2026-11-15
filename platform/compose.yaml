@@ -1,0 +1,17 @@
+name: devplatform
+
+# One command for the whole portfolio. Each included stack stays independently runnable.
+include:
+  - ../react-taskflow/compose.yaml     # + nodejs-liveboard (API ×2, worker, Postgres, Redis, LB)
+  - ../angular-adminhub/compose.yaml   # + python-insight (API, Celery worker/beat, Postgres, Redis)
+  - path: ../go-pulsecheck/compose.yaml
+    env_file: ./pulse.env              # PulseCheck monitors every other service
+
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./landing:/usr/share/nginx/html:ro
+    ports: ["${GATEWAY_PORT:-7100}:80"]
+    depends_on: [taskflow-web, adminhub-web, pulse-api, pulse-grafana]

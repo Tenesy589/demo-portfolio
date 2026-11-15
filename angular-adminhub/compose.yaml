@@ -1,0 +1,13 @@
+name: adminhub
+
+# Pulls in the InsightAPI stack (API, Celery worker + beat, Postgres, Redis).
+include:
+  - ../python-insight/compose.yaml
+
+services:
+  adminhub-web:
+    build: .
+    image: demo/adminhub:latest
+    ports: ["${ADMINHUB_PORT:-7104}:80"]
+    depends_on:
+      insight-api: { condition: service_healthy }

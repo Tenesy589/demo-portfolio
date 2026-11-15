@@ -1,0 +1,51 @@
+# Production overlay for a shared server:
+#   docker compose -f platform/compose.yaml -f deploy/compose.prod.yaml up -d
+# - only the gateway is published, and only on 127.0.0.1 (the host's reverse proxy does TLS)
+# - every container gets a memory ceiling so the demo can never starve other apps on the box
+# - log rotation so container logs can't fill the disk
+# - "lean" profile for a 4 GB box shared with production: ~0.75 GB in total
+#   (1 API replica, 1 uvicorn worker, Celery beat embedded in the worker, no Prometheus/Grafana)
+# - oom_score_adj 500: if memory ever runs out, the kernel kills demo containers before anything else
+
+x-limits: &logs
+  logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+  oom_score_adj: 500
+
+services:
+  gateway:            { <<: *logs, ports: !override ["127.0.0.1:${GATEWAY_PORT:-7100}:80"], mem_limit: 64m, restart: unless-stopped, depends_on: !override [taskflow-web, adminhub-web, pulse-api] }
+
+  liveboard-lb:       { <<: *logs, ports: !reset [], mem_limit: 64m, restart: unless-stopped }
+  liveboard-api:      { <<: *logs, mem_limit: 256m, restart: unless-stopped, deploy: { replicas: 1 } }
+  liveboard-worker:   { <<: *logs, mem_limit: 192m, restart: unless-stopped }
+  liveboard-db:       { <<: *logs, mem_limit: 256m, restart: unless-stopped }
+  liveboard-redis:    { <<: *logs, mem_limit: 96m, restart: unless-stopped }
+  taskflow-web:       { <<: *logs, ports: !reset [], mem_limit: 64m, restart: unless-stopped }
+
+  insight-api:
+    <<: *logs
+    ports: !reset []
+    mem_limit: 384m
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers"]
+  insight-worker:
+    <<: *logs
+    mem_limit: 448m
+    restart: unless-stopped
+    command: ["celery", "-A", "app.worker", "worker", "-B", "--schedule=/tmp/celerybeat-schedule", "--loglevel=INFO", "--concurrency=1"]
+  insight-beat:       { profiles: [full] }   # embedded in the worker (-B)
+  insight-db:         { <<: *logs, mem_limit: 256m, restart: unless-stopped }
+  insight-redis:      { <<: *logs, mem_limit: 96m, restart: unless-stopped }
+  adminhub-web:       { <<: *logs, ports: !reset [], mem_limit: 64m, restart: unless-stopped }
+
+  pulse-api:
+    <<: *logs
+    ports: !reset []
+    mem_limit: 128m
+    restart: unless-stopped
+    environment:
+      SEED_URLS: http://liveboard-lb/health,http://insight-api:8000/health,http://taskflow-web/,http://adminhub-web/
+  pulse-prober:       { <<: *logs, mem_limit: 128m, restart: unless-stopped }
+  pulse-db:           { <<: *logs, mem_limit: 192m, restart: unless-stopped }
+  # Monitoring stack is part of the "full" profile only (8 GB+ servers).
+  pulse-prometheus: { profiles: [full] }
+  pulse-grafana:    { profiles: [full] }

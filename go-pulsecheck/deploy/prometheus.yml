@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: pulsecheck
+    static_configs: [{ targets: ["pulse-api:8080"] }]
+  # Scraped when the full platform is running; harmlessly "down" otherwise.
+  - job_name: liveboard
+    static_configs: [{ targets: ["liveboard-lb:80"] }]
+  - job_name: insight
+    static_configs: [{ targets: ["insight-api:8000"] }]

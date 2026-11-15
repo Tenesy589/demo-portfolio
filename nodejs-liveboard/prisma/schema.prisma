@@ -1,0 +1,83 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  boards       Board[]
+  assigned     Card[]     @relation("assignee")
+  activities   Activity[]
+}
+
+model Board {
+  id         String     @id @default(cuid())
+  title      String
+  ownerId    String
+  owner      User       @relation(fields: [ownerId], references: [id])
+  columns    Column[]
+  cards      Card[]
+  activities Activity[]
+  createdAt  DateTime   @default(now())
+}
+
+model Column {
+  id       String @id @default(cuid())
+  boardId  String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title    String
+  position Float
+  cards    Card[]
+
+  @@index([boardId, position])
+}
+
+/// Cards use fractional positions: moving a card updates one row instead of re-indexing the column.
+model Card {
+  id          String   @id @default(cuid())
+  boardId     String
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  columnId    String
+  column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @default("")
+  priority    Priority @default(MEDIUM)
+  position    Float
+  assigneeId  String?
+  assignee    User?    @relation("assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  /// Incremented on every write — clients send it back for optimistic concurrency control.
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([columnId, position])
+  @@index([boardId])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([boardId, createdAt(sort: Desc)])
+}

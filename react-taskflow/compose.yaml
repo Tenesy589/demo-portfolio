@@ -1,0 +1,13 @@
+name: taskflow
+
+# Pulls in the whole LiveBoard backend stack (API ×2, worker, Postgres, Redis, LB).
+include:
+  - ../nodejs-liveboard/compose.yaml
+
+services:
+  taskflow-web:
+    build: .
+    image: demo/taskflow:latest
+    ports: ["${TASKFLOW_PORT:-7102}:80"]
+    depends_on:
+      liveboard-lb: { condition: service_started }

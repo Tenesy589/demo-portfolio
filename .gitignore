@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.angular/
+__pycache__/
+*.pyc
+.env
+*.tsbuildinfo
+.DS_Store
+deploy/.env
+*.tar

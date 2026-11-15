@@ -1,0 +1,57 @@
+name: insight
+
+x-env: &env
+  DATABASE_URL: postgresql+asyncpg://insight:insight@insight-db:5432/insight
+  REDIS_URL: redis://insight-redis:6379/0
+  JWT_SECRET: ${JWT_SECRET:-change-me-in-production-please}
+  DATA_DIR: /data
+
+x-app: &app
+  image: demo/insight:latest
+  environment: *env
+  volumes: [insight-data:/data] # shared by API (reads model) and worker (writes model, reads uploads)
+
+services:
+  insight-db:
+    image: postgres:17-alpine
+    environment: { POSTGRES_USER: insight, POSTGRES_PASSWORD: insight, POSTGRES_DB: insight }
+    volumes: [insight-db:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U insight"], interval: 5s, retries: 10 }
+
+  insight-redis:
+    image: redis:7-alpine
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s }
+
+  insight-migrate:
+    <<: *app
+    build: .
+    command: ["sh", "-c", "alembic upgrade head && python -m app.seed"]
+    healthcheck: { disable: true }
+    depends_on:
+      insight-db: { condition: service_healthy }
+
+  insight-api:
+    <<: *app
+    ports: ["${INSIGHT_PORT:-7103}:8000"]
+    depends_on:
+      insight-migrate: { condition: service_completed_successfully }
+      insight-redis: { condition: service_healthy }
+
+  insight-worker:
+    <<: *app
+    command: ["celery", "-A", "app.worker", "worker", "--loglevel=INFO", "--concurrency=2"]
+    healthcheck: { test: ["CMD", "celery", "-A", "app.worker", "inspect", "ping", "-t", "5"], interval: 30s, timeout: 10s }
+    depends_on:
+      insight-redis: { condition: service_healthy }
+      insight-migrate: { condition: service_completed_successfully }
+
+  insight-beat:
+    <<: *app
+    command: ["celery", "-A", "app.worker", "beat", "--loglevel=INFO", "--schedule=/tmp/celerybeat-schedule"]
+    healthcheck: { disable: true }
+    depends_on:
+      insight-redis: { condition: service_healthy }
+
+volumes:
+  insight-db:
+  insight-data:
