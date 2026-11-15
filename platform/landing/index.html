@@ -40,24 +40,48 @@
   .status.up i { background:var(--up); } .status.down i { background:var(--down); }
   .api { font-size:14px; color:var(--muted); }
   footer { color:var(--muted); font-size:13px; padding:40px 0; }
+  .live { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:22px; align-items:center; }
+  .live .shots { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory; }
+  .live .shots img { width:150px; height:auto; flex:none; border-radius:14px; border:1px solid var(--border); scroll-snap-align:start; }
+  .badge { font-size:12px; font-weight:600; border-radius:99px; padding:2px 10px; background:var(--tint); color:var(--accent); }
+  @media (max-width:760px) { .live { grid-template-columns:minmax(0,1fr); } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Демо-проекты: <span>что мы умеем делать</span></h1>
-    <p class="lead">Четыре работающих приложения, которые можно открыть и попробовать прямо сейчас. Это уменьшенные версии систем, которые компании заказывают под себя: таск-трекер, CRM с аналитикой и мониторинг сайтов.</p>
+    <p class="lead">Работающие приложения, которые можно открыть и попробовать прямо сейчас: живой продукт с мобильными приложениями и уменьшенные версии систем, которые компании заказывают под себя — таск-трекер, CRM с аналитикой, мониторинг сайтов и маркетплейс с админ-панелью.</p>
   </header>
 
   <h2>Как посмотреть</h2>
   <div class="how">
     <div><b>1. Выберите проект</b>Нажмите «Открыть» на карточке ниже.</div>
-    <div><b>2. Войдите</b>Логин и пароль уже подставлены — просто нажмите «Войти».</div>
+    <div><b>2. Войдите</b>Логин и пароль указаны на карточке и на странице входа.</div>
     <div><b>3. Следуйте подсказкам</b>На каждой странице есть блок «Как пользоваться».</div>
     <div><b>Можно смело нажимать</b>Это демо: изменения ни на что не влияют.</div>
   </div>
 
-  <h2>Проекты</h2>
+  <h2>Живой продукт</h2>
+  <article class="card live">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <h3><span class="lang" style="background:#0f766e">Laravel + Nuxt + Flutter</span>Glowly<span class="status" id="st-glowly"><i></i><span>проверяем…</span></span></h3>
+      <p class="what">Онлайн-запись к мастерам красоты: каталог мастеров на карте, свободное время и запись в пару касаний, календарь и клиентская база мастера, аналитика, отзывы и Telegram-бот. Работает в продакшене.</p>
+      <p class="who">Сайт, админ-панель и мобильные приложения для iOS и Android (Flutter) — одна система, общий сервер, уведомления в реальном времени.</p>
+      <div class="try"><b>Что посмотреть:</b><ol><li>Найдите мастера на карте и откройте его профиль.</li><li>Выберите услугу — увидите свободные окна и скидки на «тихие» часы.</li><li>Пролистайте скриншоты мобильного приложения справа.</li></ol></div>
+      <div class="login">Мобильные приложения: <span class="badge">в тестировании — App Store и Google Play</span></div>
+      <div class="tags"><span>Laravel</span><span>Nuxt / Vue</span><span>Flutter</span><span>WebSocket</span><span>PostgreSQL</span><span>Telegram Mini App</span></div>
+      <a class="open" href="https://glowly.uz" target="_blank" rel="noopener">Открыть glowly.uz →</a>
+    </div>
+    <div class="shots" aria-label="Скриншоты мобильного приложения Glowly">
+      <img src="img/glowly-2_search.jpg" alt="Поиск мастеров на карте" loading="lazy" />
+      <img src="img/glowly-4_booking.jpg" alt="Запись: свободное время онлайн" loading="lazy" />
+      <img src="img/glowly-5_calendar.jpg" alt="Календарь мастера" loading="lazy" />
+      <img src="img/glowly-7_analytics.jpg" alt="Аналитика мастера" loading="lazy" />
+    </div>
+  </article>
+
+  <h2>Демо-проекты</h2>
   <div class="grid" id="cards"></div>
 
   <footer>Зелёная точка на карточке означает, что приложение работает прямо сейчас — это проверяет наш сервис мониторинга PulseCheck.</footer>
@@ -117,7 +141,7 @@ document.getElementById('cards').innerHTML = projects.map((p) => `
 async function refresh() {
   try {
     const monitors = await (await fetch('/status')).json();
-    for (const p of projects) {
+    for (const p of [...projects, { id: 'glowly', health: 'glowly.uz' }]) {
       const el = document.getElementById('st-' + p.id);
       // PulseCheck itself is up if it answered this request at all.
       const m = p.id === 'pulse' ? { last: { up: true } } : monitors.find((m) => m.url.includes(p.health));
