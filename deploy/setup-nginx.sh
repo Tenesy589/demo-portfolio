@@ -4,7 +4,7 @@
 # Does not touch the existing glowly config.
 set -eu
 DOMAIN=${DOMAIN:-demo.glowly.uz}
-NAMES="$DOMAIN taskflow.$DOMAIN admin.$DOMAIN liveboard.$DOMAIN insight.$DOMAIN pulse.$DOMAIN"
+NAMES="$DOMAIN taskflow.$DOMAIN admin.$DOMAIN liveboard.$DOMAIN insight.$DOMAIN pulse.$DOMAIN omex.$DOMAIN"
 
 install -m 644 "$(dirname "$0")/nginx-demo.conf" /etc/nginx/sites-available/demo
 sed -i "s/demo\.glowly\.uz/$DOMAIN/g" /etc/nginx/sites-available/demo
@@ -16,7 +16,7 @@ systemctl reload nginx
 
 args=""
 for n in $NAMES; do args="$args -d $n"; done
-certbot --nginx --non-interactive --agree-tos --redirect --keep-until-expiring --cert-name "$DOMAIN" $args
+certbot --nginx --non-interactive --agree-tos --redirect --keep-until-expiring --expand --cert-name "$DOMAIN" $args
 
 nginx -t && systemctl reload nginx
 echo "Done: https://$DOMAIN"
