@@ -44,7 +44,7 @@ export function useBoardRealtime(boardId: string): RealtimeState {
       if (e.boardId !== boardId) return;
       qc.setQueryData<Board>(keys.board(boardId), (b) => (b ? applyEvent(b, e) : b));
       qc.invalidateQueries({ queryKey: keys.activity(boardId) });
-      if (e.actor.id !== me?.id && e.type === 'card.created') toast(`${e.actor.name} added “${e.payload.title}”`);
+      if (e.actor.id !== me?.id && e.type === 'card.created') toast(`${e.actor.name} добавил(а) «${e.payload.title}»`);
     };
     const onEditing = ({ cardId, editing, user }: { cardId: string; editing: boolean; user: User }) =>
       setEditingMap((prev) => {

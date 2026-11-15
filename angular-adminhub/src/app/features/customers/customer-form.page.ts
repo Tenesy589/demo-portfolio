@@ -43,9 +43,9 @@ const uniqueEmails: ValidatorFn = (arr: AbstractControl): ValidationErrors | nul
           <select formControlName="segment">@for (s of ['SMB', 'MidMarket', 'Enterprise']; track s) { <option [value]="s">{{ s }}</option> }</select>
         </label>
         <label>{{ 'cust.status' | t }}
-          <select formControlName="status">@for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s">{{ s }}</option> }</select>
+          <select formControlName="status">@for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s">{{ 'status.' + s | t }}</option> }</select>
         </label>
-        <label>Plan
+        <label>{{ 'cust.plan' | t }}
           <select formControlName="plan">@for (p of ['basic', 'pro', 'enterprise']; track p) { <option [value]="p">{{ p }}</option> }</select>
         </label>
         <label>{{ 'cust.spend' | t }} ($)<input type="number" formControlName="monthly_spend" /><app-field-error [control]="form.controls.monthly_spend" /></label>
@@ -55,9 +55,9 @@ const uniqueEmails: ValidatorFn = (arr: AbstractControl): ValidationErrors | nul
       <fieldset class="card">
         <legend>{{ 'form.health' | t }}</legend>
         <label>{{ 'cust.tenure' | t }}<input type="number" formControlName="tenure_months" /><app-field-error [control]="form.controls.tenure_months" /></label>
-        <label>Support tickets<input type="number" formControlName="support_tickets" /></label>
-        <label>Last login (days ago)<input type="number" formControlName="last_login_days" /></label>
-        <label>NPS: {{ form.controls.nps.value }}<input type="range" min="0" max="10" formControlName="nps" /></label>
+        <label>{{ 'cust.tickets' | t }}<input type="number" formControlName="support_tickets" /></label>
+        <label>{{ 'cust.lastLogin' | t }}<input type="number" formControlName="last_login_days" /></label>
+        <label>{{ 'cust.nps' | t }}: {{ form.controls.nps.value }}<input type="range" min="0" max="10" formControlName="nps" /></label>
       </fieldset>
 
       <fieldset class="card span-all" formArrayName="contacts">
@@ -66,8 +66,8 @@ const uniqueEmails: ValidatorFn = (arr: AbstractControl): ValidationErrors | nul
           <div class="contact-row" [formGroupName]="i">
             <label>{{ 'cust.name' | t }}<input formControlName="name" /><app-field-error [control]="c.controls.name" /></label>
             <label>Email<input formControlName="email" /><app-field-error [control]="c.controls.email" /></label>
-            <label>Phone<input formControlName="phone" placeholder="+380 67 123 4567" /><app-field-error [control]="c.controls.phone" /></label>
-            <label>Role<input formControlName="role" /></label>
+            <label>{{ 'cust.phone' | t }}<input formControlName="phone" placeholder="+380 67 123 4567" /><app-field-error [control]="c.controls.phone" /></label>
+            <label>{{ 'cust.role' | t }}<input formControlName="role" /></label>
             <button type="button" class="btn ghost sm" (click)="contacts.removeAt(i); form.markAsDirty()">✕</button>
           </div>
         }
@@ -77,6 +77,7 @@ const uniqueEmails: ValidatorFn = (arr: AbstractControl): ValidationErrors | nul
 
       <div class="actions span-all">
         @if (serverError()) { <span class="error">{{ serverError() }}</span> }
+        @else if (form.invalid && form.touched) { <span class="muted">{{ 'form.fixErrors' | t }}</span> }
         <a class="btn ghost" [routerLink]="id() ? ['/customers', id()] : ['/customers']">{{ 'form.cancel' | t }}</a>
         <button class="btn primary" [disabled]="form.invalid || saving()">{{ saving() ? '…' : ('form.save' | t) }}</button>
       </div>

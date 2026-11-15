@@ -29,10 +29,12 @@ import { HasRoleDirective } from '../shared/has-role.directive';
       <div class="main">
         <header class="topbar">
           <button class="btn ghost burger" (click)="navOpen.set(!navOpen())" aria-label="Menu">☰</button>
+          <span class="brand mobile-only"><span class="logo">◆</span> AdminHub</span>
           <span class="spacer"></span>
           <div class="seg">
-            <button [class.on]="i18n.lang() === 'uk'" (click)="i18n.setLang('uk')">UA</button>
-            <button [class.on]="i18n.lang() === 'en'" (click)="i18n.setLang('en')">EN</button>
+            @for (l of i18n.langs; track l) {
+              <button type="button" [class.on]="i18n.lang() === l" (click)="i18n.setLang(l)">{{ l === 'uk' ? 'UA' : l.toUpperCase() }}</button>
+            }
           </div>
           <button class="btn ghost" (click)="toggleTheme()" aria-label="Theme">{{ dark() ? '☀️' : '🌙' }}</button>
         </header>

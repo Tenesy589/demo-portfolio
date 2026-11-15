@@ -43,7 +43,7 @@ function useOptimisticBoard<TVars, TResult>(
     },
     onError: (err, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(key, ctx.previous);
-      toast(err instanceof ApiError && err.status === 409 ? 'Someone else changed this card — reloaded latest version' : err.message, 'error');
+      toast(err instanceof ApiError && err.status === 409 ? 'Эту карточку только что изменил другой пользователь — показана актуальная версия' : err.message, 'error');
       if (err instanceof ApiError && err.status === 409) qc.invalidateQueries({ queryKey: key });
     },
     onSuccess: (result) => {

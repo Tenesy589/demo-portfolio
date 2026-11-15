@@ -15,11 +15,11 @@ export function Layout() {
             <span className="grid size-8 place-items-center rounded-lg bg-brand-500 text-white">✓</span> TaskFlow
           </Link>
           <div className="flex-1" />
-          <button className="btn-ghost" onClick={toggle} aria-label="Toggle theme">{theme === 'dark' ? '☀️' : '🌙'}</button>
+          <button className="btn-ghost" onClick={toggle} aria-label="Сменить тему" title="Светлая / тёмная тема">{theme === 'dark' ? '☀️' : '🌙'}</button>
           {user && (
             <>
               <Avatar user={user} />
-              <button className="btn-ghost" onClick={() => (closeSocket(), logout())}>Log out</button>
+              <button className="btn-ghost" onClick={() => (closeSocket(), logout())}>Выйти</button>
             </>
           )}
         </div>

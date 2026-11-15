@@ -1,3 +1,4 @@
+import { HelpComponent } from '../../shared/help.component';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -13,9 +14,10 @@ const PALETTE = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ChartComponent, KpiComponent, RiskBadgeComponent, TranslatePipe, RouterLink, DecimalPipe],
+  imports: [HelpComponent, ChartComponent, KpiComponent, RiskBadgeComponent, TranslatePipe, RouterLink, DecimalPipe],
   providers: [CurrencyPipe],
   template: `
+    <app-help key="help.dashboard" />
     @if (data(); as d) {
       <section class="grid kpis">
         <app-kpi [label]="'dash.revenue' | t" [value]="money(d.kpis.revenue_total)" />
@@ -43,14 +45,16 @@ const PALETTE = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7
       <section class="grid two">
         <div class="card">
           <h3>{{ 'dash.cohorts' | t }}</h3>
+          <p class="muted small">{{ 'dash.cohortsHint' | t }}</p>
           <div class="table-scroll">
             <table class="heatmap">
               <tr><th></th><th>n</th>@for (a of d.cohorts.ages; track a) { <th>M{{ a }}</th> }</tr>
               @for (c of d.cohorts.cohorts; track c; let i = $index) {
                 <tr>
                   <th>{{ c }}</th><td class="muted">{{ d.cohorts.sizes[i] }}</td>
-                  @for (v of d.cohorts.matrix[i]; track $index) {
-                    <td [style.background]="v === null ? 'transparent' : 'rgba(99,102,241,' + v / 100 + ')'" [class.light]="v !== null && v > 55">{{ v === null ? '' : (v | number: '1.0-0') }}</td>
+                  @for (v of d.cohorts.matrix[i]; track $index; let j = $index) {
+                    @if (j > d.cohorts.cohorts.length - 1 - i || v === null) { <td class="future"></td> }
+                    @else { <td [style.background]="'rgba(99,102,241,' + v / 100 + ')'" [class.light]="v > 55">{{ v | number: '1.0-0' }}</td> }
                   }
                 </tr>
               }
@@ -108,23 +112,23 @@ export default class DashboardPage {
       data: {
         labels,
         datasets: [
-          { label: 'Revenue', data: [...f.history.map((h) => h.revenue), ...pad(f.forecast.length)], borderColor: PALETTE[0], backgroundColor: 'rgba(99,102,241,.12)', fill: true, tension: 0.3 },
-          { label: 'Forecast', data: [...pad(f.history.length - 1), lastHist, ...f.forecast.map((p) => p.revenue)], borderColor: PALETTE[2], borderDash: [6, 4], tension: 0.3 },
-          { label: '95% CI', data: [...pad(f.history.length), ...f.forecast.map((p) => p.high)], borderWidth: 0, backgroundColor: 'rgba(245,158,11,.15)', fill: '+1', pointRadius: 0 },
+          { label: this.i18n.t('chart.revenue'), data: [...f.history.map((h) => h.revenue), ...pad(f.forecast.length)], borderColor: PALETTE[0], backgroundColor: 'rgba(99,102,241,.12)', fill: true, tension: 0.3 },
+          { label: this.i18n.t('chart.forecast'), data: [...pad(f.history.length - 1), lastHist, ...f.forecast.map((p) => p.revenue)], borderColor: PALETTE[2], borderDash: [6, 4], tension: 0.3 },
+          { label: this.i18n.t('chart.ci'), data: [...pad(f.history.length), ...f.forecast.map((p) => p.high)], borderWidth: 0, backgroundColor: 'rgba(245,158,11,.15)', fill: '+1', pointRadius: 0 },
           { label: '', data: [...pad(f.history.length), ...f.forecast.map((p) => p.low)], borderWidth: 0, pointRadius: 0 },
         ],
       },
-      options: { plugins: { legend: { labels: { filter: (i) => !!i.text } } }, interaction: { mode: 'index', intersect: false } },
+      options: { locale: this.i18n.locale(), plugins: { legend: { labels: { filter: (i) => !!i.text } } }, interaction: { mode: 'index', intersect: false } },
     };
   });
 
   readonly regionChart = computed<ChartConfiguration | undefined>(() => {
     const r = this.data()?.region;
-    return r && { type: 'doughnut', data: { labels: r.map((x) => x.name), datasets: [{ data: r.map((x) => x.revenue), backgroundColor: PALETTE }] }, options: { plugins: { legend: { position: 'right' } } } };
+    return r && { type: 'doughnut', data: { labels: r.map((x) => x.name), datasets: [{ data: r.map((x) => x.revenue), backgroundColor: PALETTE }] }, options: { locale: this.i18n.locale(), plugins: { legend: { position: 'right' } } } };
   });
 
   readonly productChart = computed<ChartConfiguration | undefined>(() => {
     const p = this.data()?.product;
-    return p && { type: 'bar', data: { labels: p.map((x) => x.name), datasets: [{ label: 'Revenue', data: p.map((x) => x.revenue), backgroundColor: PALETTE[0], borderRadius: 6 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } } } };
+    return p && { type: 'bar', data: { labels: p.map((x) => x.name), datasets: [{ label: this.i18n.t('chart.revenue'), data: p.map((x) => x.revenue), backgroundColor: PALETTE[0], borderRadius: 6 }] }, options: { locale: this.i18n.locale(), indexAxis: 'y', plugins: { legend: { display: false } } } };
   });
 }

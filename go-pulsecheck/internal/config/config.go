@@ -17,6 +17,7 @@ type Config struct {
 	RateLimitRPS float64
 	SeedURLs     []string
 	PublicURL    string
+	AdminToken   string
 }
 
 func Load() Config {
@@ -29,6 +30,7 @@ func Load() Config {
 		RateLimitRPS: float64(envInt("RATE_LIMIT_RPS", 20)),
 		SeedURLs:     splitNonEmpty(env("SEED_URLS", "")),
 		PublicURL:    env("PUBLIC_URL", "http://pulse-api:8080"),
+		AdminToken:   env("PULSE_ADMIN_TOKEN", ""),
 	}
 }
 

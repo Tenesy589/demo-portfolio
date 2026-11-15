@@ -5,7 +5,7 @@ import { BoardEventBus } from '../common/board-events';
 import { PrismaService } from '../infra/prisma.service';
 import { ColumnDto, CreateBoardDto } from './boards.dto';
 
-const DEFAULT_COLUMNS = ['Backlog', 'In progress', 'Review', 'Done'];
+const DEFAULT_COLUMNS = ['Идеи', 'В работе', 'На проверке', 'Готово'];
 
 @Injectable()
 export class BoardsService {

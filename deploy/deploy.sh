@@ -18,6 +18,7 @@ ensure_secret() {
   echo "Generated $1"
 }
 ensure_secret JWT_SECRET
+ensure_secret PULSE_ADMIN_TOKEN       # open https://pulse.<domain>/?admin=<token> once to manage monitors
 ensure_secret GRAFANA_ADMIN_PASSWORD  # used only with --profile full
 
 compose() { docker compose -p demo --env-file "$ENV" -f platform/compose.yaml -f deploy/compose.prod.yaml "$@"; }

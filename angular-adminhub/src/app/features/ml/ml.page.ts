@@ -1,3 +1,4 @@
+import { HelpComponent } from '../../shared/help.component';
 import { DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
@@ -6,28 +7,31 @@ import { catchError, debounceTime, of, startWith, switchMap } from 'rxjs';
 import { MlApi } from '../../core/api';
 import { I18nService, TranslatePipe } from '../../core/i18n.service';
 import { TaskStatus } from '../../core/models';
+import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { HasRoleDirective } from '../../shared/has-role.directive';
-import { RiskBadgeComponent } from '../../shared/ui';
 
 @Component({
   selector: 'app-ml',
-  imports: [ReactiveFormsModule, TranslatePipe, DecimalPipe, PercentPipe, DatePipe, HasRoleDirective, RiskBadgeComponent],
+  imports: [HelpComponent, ReactiveFormsModule, TranslatePipe, DecimalPipe, PercentPipe, DatePipe, HasRoleDirective],
   template: `
-    <div class="page-head"><h1>🧠 Churn AI</h1></div>
+    <div class="page-head"><h1>🧠 {{ 'nav.ml' | t }}</h1></div>
+    <app-help key="help.ml" />
     <section class="grid two">
       <div class="card">
         <h3>{{ 'ml.model' | t }}</h3>
         @if (model.value(); as m) {
           <dl class="stats">
-            <dt>Algorithm</dt><dd><strong>{{ m.model }}</strong></dd>
-            @for (s of cvScores(m.cv_roc_auc); track s[0]) { <dt>CV ROC-AUC · {{ s[0] }}</dt><dd>{{ s[1] | number: '1.3-3' }}</dd> }
-            <dt>Test ROC-AUC</dt><dd>{{ m.test_roc_auc | number: '1.3-3' }}</dd>
-            <dt>Precision / Recall</dt><dd>{{ m.precision | percent }} / {{ m.recall | percent }}</dd>
-            <dt>Train / test</dt><dd>{{ m.train_size }} / {{ m.test_size }}</dd>
-            <dt>Trained</dt><dd>{{ m.trained_at | date: 'medium' : undefined : i18n.locale() }}</dd>
+            <dt>{{ 'ml.algorithm' | t }}</dt><dd><strong>{{ modelName(m.model) }}</strong></dd>
+            <dt>{{ 'ml.testAuc' | t }}</dt><dd><strong>{{ m.test_roc_auc | number: '1.2-2' : i18n.locale() }}</strong></dd>
+            @for (s of cvScores(m.cv_roc_auc); track s[0]) { <dt>{{ 'ml.cvAuc' | t }} · {{ modelName(s[0]) }}</dt><dd>{{ s[1] | number: '1.2-2' : i18n.locale() }}</dd> }
+            <dt>{{ 'ml.precisionRecall' | t }}</dt><dd>{{ m.precision | percent : undefined : i18n.locale() }} / {{ m.recall | percent : undefined : i18n.locale() }}</dd>
+            <dt>{{ 'ml.trainTest' | t }}</dt><dd>{{ m.train_size }} / {{ m.test_size }}</dd>
+            <dt>{{ 'ml.trainedAt' | t }}</dt><dd>{{ m.trained_at | date: 'medium' : undefined : i18n.locale() }}</dd>
           </dl>
+          <p class="muted small">{{ 'ml.aucHint' | t }}</p>
         }
+        @if (!auth.hasRole('admin')) { <p class="muted small">{{ 'ml.adminOnly' | t }}</p> }
         <div *appHasRole="'admin'" class="train">
           <button class="btn primary" [disabled]="training()" (click)="train()">{{ training() ? ('ml.training' | t) : ('ml.train' | t) }}</button>
           @if (task(); as t) {
@@ -41,7 +45,7 @@ import { RiskBadgeComponent } from '../../shared/ui';
         <h3>{{ 'ml.whatIf' | t }}</h3>
         <p class="muted">{{ 'ml.whatIfHint' | t }}</p>
         @for (f of sliders; track f.key) {
-          <label class="slider">{{ f.label }}: <strong>{{ whatIf.get(f.key)!.value }}</strong>
+          <label class="slider">{{ 'feat.' + f.key | t }}: <strong>{{ whatIf.get(f.key)!.value }}</strong>
             <input type="range" [min]="f.min" [max]="f.max" [step]="f.step" [formControlName]="f.key" />
           </label>
         }
@@ -52,8 +56,8 @@ import { RiskBadgeComponent } from '../../shared/ui';
         @if (prediction(); as p) {
           <div class="gauge" [class]="'risk-' + p.risk">
             <span class="muted">{{ 'ml.probability' | t }}</span>
-            <strong>{{ p.probability | percent: '1.0-1' }}</strong>
-            <app-risk [risk]="p.risk" [probability]="p.probability" />
+            <strong>{{ p.probability | percent: '1.0-0' : i18n.locale() }}</strong>
+            <span class="badge" [class]="'risk-' + p.risk">{{ 'risk.' + p.risk | t }}</span>
           </div>
         }
       </div>
@@ -65,6 +69,7 @@ export default class MlPage {
   private readonly api = inject(MlApi);
   private readonly toast = inject(ToastService);
   readonly i18n = inject(I18nService);
+  readonly auth = inject(AuthService);
 
   readonly model = rxResource({ stream: () => this.api.model().pipe(catchError(() => of(undefined))) });
   readonly task = signal<TaskStatus | null>(null);
@@ -93,6 +98,7 @@ export default class MlPage {
   );
 
   cvScores = (o: Record<string, number>) => Object.entries(o);
+  modelName = (m: string) => ({ logistic_regression: 'Logistic Regression', random_forest: 'Random Forest' })[m] ?? m;
 
   train() {
     this.training.set(true);

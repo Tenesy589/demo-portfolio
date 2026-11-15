@@ -1,3 +1,4 @@
+import { HelpComponent } from '../../shared/help.component';
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -11,12 +12,13 @@ import { HasRoleDirective } from '../../shared/has-role.directive';
 
 @Component({
   selector: 'app-customer-list',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, CurrencyPipe, HasRoleDirective],
+  imports: [HelpComponent, ReactiveFormsModule, RouterLink, TranslatePipe, CurrencyPipe, HasRoleDirective],
   template: `
     <div class="page-head">
       <h1>{{ 'nav.customers' | t }} <span class="muted">{{ page()?.total ?? '' }}</span></h1>
       <a *appHasRole="'manager'" class="btn primary" routerLink="new">+ {{ 'cust.new' | t }}</a>
     </div>
+    <app-help key="help.customers" />
 
     <div class="card filters">
       <input class="grow" [formControl]="search" [placeholder]="'cust.search' | t" />
@@ -30,7 +32,7 @@ import { HasRoleDirective } from '../../shared/has-role.directive';
       </select>
       <select [value]="query().status ?? ''" (change)="setParam('status', $any($event.target).value)">
         <option value="">{{ 'cust.status' | t }}: {{ 'cust.all' | t }}</option>
-        @for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s">{{ s }}</option> }
+        @for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s">{{ 'status.' + s | t }}</option> }
       </select>
     </div>
 
@@ -53,7 +55,7 @@ import { HasRoleDirective } from '../../shared/has-role.directive';
                 <td>{{ c.company }}</td>
                 <td>{{ c.region }}</td>
                 <td><span class="badge">{{ c.segment }}</span></td>
-                <td><span class="badge" [class]="'status-' + c.status">{{ c.status }}</span></td>
+                <td><span class="badge" [class]="'status-' + c.status">{{ 'status.' + c.status | t }}</span></td>
                 <td class="num">{{ c.monthly_spend | currency: 'USD' : 'symbol' : '1.0-0' }}</td>
                 <td class="num">{{ c.tenure_months }}</td>
               </tr>

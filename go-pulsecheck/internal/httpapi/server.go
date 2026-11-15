@@ -4,14 +4,17 @@ package httpapi
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"math/rand/v2"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	pulsev1 "github.com/demo/pulsecheck/gen/pulse/v1"
@@ -32,16 +35,20 @@ type Server struct {
 	Scheduler Reloader
 	Static    fs.FS
 	RPS       float64
+	// AdminToken, when set, is required to add/delete monitors and run ad-hoc checks.
+	// Public visitors get a read-only dashboard and can't make the server fetch arbitrary URLs.
+	AdminToken string
 }
 
 func (s *Server) Handler(stop <-chan struct{}) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/monitors", s.listMonitors)
-	mux.HandleFunc("POST /api/monitors", s.createMonitor)
+	mux.HandleFunc("POST /api/monitors", s.createMonitor) // visitors may add public sites; see createMonitor
 	mux.HandleFunc("GET /api/monitors/{id}", s.getMonitor)
-	mux.HandleFunc("DELETE /api/monitors/{id}", s.deleteMonitor)
+	mux.HandleFunc("DELETE /api/monitors/{id}", s.admin(s.deleteMonitor))
 	mux.HandleFunc("GET /api/incidents", s.listIncidents)
-	mux.HandleFunc("POST /api/check", s.adhocCheck)
+	mux.HandleFunc("POST /api/check", s.admin(s.adhocCheck))
+	mux.HandleFunc("GET /api/session", s.session)
 	mux.HandleFunc("GET /api/events", s.events)
 	mux.HandleFunc("GET /demo/flaky", flaky)
 	mux.HandleFunc("GET /demo/slow", slow)
@@ -126,6 +133,19 @@ func (s *Server) createMonitor(w http.ResponseWriter, r *http.Request) {
 	if err := req.validate(); err != nil {
 		writeError(w, http.StatusUnprocessableEntity, err.Error())
 		return
+	}
+	if !s.isAdmin(r) {
+		// Public visitors: only public internet sites, and a cap on the total,
+		// so the demo can't be used to probe internal services (SSRF) or spammed.
+		if err := publicOnly(r.Context(), req.URL); err != nil {
+			writeError(w, http.StatusUnprocessableEntity, err.Error())
+			return
+		}
+		if list, err := s.Store.ListMonitors(r.Context()); err == nil && len(list) >= maxPublicMonitors {
+			writeError(w, http.StatusTooManyRequests, "monitor limit reached for the demo")
+			return
+		}
+		req.IntervalSeconds = max(req.IntervalSeconds, 10)
 	}
 	m, err := s.Store.CreateMonitor(r.Context(), store.Monitor{Name: req.Name, URL: req.URL, IntervalSeconds: req.IntervalSeconds, TimeoutMs: req.TimeoutMs, ExpectStatus: req.ExpectStatus})
 	switch {
@@ -248,6 +268,54 @@ func flaky(w http.ResponseWriter, _ *http.Request) {
 func slow(w http.ResponseWriter, _ *http.Request) {
 	time.Sleep(time.Duration(800+rand.IntN(1500)) * time.Millisecond)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "slow but ok"})
+}
+
+// ---------- admin ----------
+
+const maxPublicMonitors = 25
+
+// publicOnly rejects URLs whose host is an internal name or resolves to a
+// private, loopback or link-local address.
+func publicOnly(ctx context.Context, raw string) error {
+	u, _ := url.Parse(raw)
+	host := u.Hostname()
+	if !strings.Contains(host, ".") {
+		return errors.New("only public websites can be added")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil || len(ips) == 0 {
+		return errors.New("domain not found")
+	}
+	for _, ip := range ips {
+		if ip.IP.IsPrivate() || ip.IP.IsLoopback() || ip.IP.IsLinkLocalUnicast() || ip.IP.IsUnspecified() || ip.IP.IsMulticast() {
+			return errors.New("only public websites can be added")
+		}
+	}
+	return nil
+}
+
+func (s *Server) isAdmin(r *http.Request) bool {
+	if s.AdminToken == "" {
+		return true // local/dev mode: everything open
+	}
+	return subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Admin-Token")), []byte(s.AdminToken)) == 1
+}
+
+func (s *Server) admin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !s.isAdmin(r) {
+			writeError(w, http.StatusForbidden, "read-only demo: admin token required")
+			return
+		}
+		next(w, r)
+	}
+}
+
+// session tells the dashboard whether to show editing controls.
+func (s *Server) session(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]bool{"admin": s.isAdmin(r)})
 }
 
 // ---------- helpers ----------

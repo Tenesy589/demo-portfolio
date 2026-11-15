@@ -4,8 +4,13 @@ package probe
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"syscall"
 	"time"
 
 	pulsev1 "github.com/demo/pulsecheck/gen/pulse/v1"
@@ -56,7 +61,7 @@ func (c *Checker) Check(ctx context.Context, req *pulsev1.ProbeRequest) *pulsev1
 
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
-		res.Error = err.Error()
+		res.Error = describe(err, timeout)
 		return res
 	}
 	defer resp.Body.Close()
@@ -72,4 +77,25 @@ func (c *Checker) Check(ctx context.Context, req *pulsev1.ProbeRequest) *pulsev1
 		res.TlsDaysLeft = int32(time.Until(resp.TLS.PeerCertificates[0].NotAfter).Hours() / 24)
 	}
 	return res
+}
+
+// describe turns low-level network errors into something an operator can act on.
+func describe(err error, timeout time.Duration) string {
+	var dnsErr *net.DNSError
+	var certErr *tls.CertificateVerificationError
+	var unknownAuth x509.UnknownAuthorityError
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return fmt.Sprintf("Нет ответа за %.0f с (таймаут)", timeout.Seconds())
+	case errors.As(err, &dnsErr):
+		return "Домен не найден (DNS)"
+	case errors.Is(err, syscall.ECONNREFUSED):
+		return "Сервер отклонил соединение"
+	case errors.Is(err, syscall.ECONNRESET):
+		return "Сервер оборвал соединение"
+	case errors.As(err, &certErr), errors.As(err, &unknownAuth):
+		return "Неверный SSL-сертификат"
+	default:
+		return "Ошибка сети: " + err.Error()
+	}
 }

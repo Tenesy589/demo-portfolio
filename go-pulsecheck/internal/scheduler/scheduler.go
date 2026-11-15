@@ -27,13 +27,14 @@ type Scheduler struct {
 	nextRun  map[int64]time.Time
 	lastUp   map[int64]bool
 	reload   chan struct{}
+	started  time.Time
 }
 
 func New(st *store.Store, h *store.History, ev *broker.Broker[store.Result], client pulsev1.ProberClient) *Scheduler {
 	return &Scheduler{
 		store: st, history: h, events: ev, client: client,
 		monitors: map[int64]store.Monitor{}, nextRun: map[int64]time.Time{}, lastUp: map[int64]bool{},
-		reload: make(chan struct{}, 1),
+		reload: make(chan struct{}, 1), started: time.Now(),
 	}
 }
 
@@ -181,6 +182,9 @@ func (s *Scheduler) handle(ctx context.Context, res *pulsev1.ProbeResult) {
 	// Persist only state *transitions* — not every check.
 	at := time.UnixMilli(r.CheckedAt)
 	switch {
+	// Warm-up: right after a (re)start the services next to us may still be booting;
+	// don't record that as an outage.
+	case !r.Up && time.Since(s.started) < time.Minute:
 	case !r.Up && (!seen || wasUp):
 		cause := r.Error
 		if cause == "" {

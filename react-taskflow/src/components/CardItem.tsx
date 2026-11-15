@@ -5,6 +5,8 @@ import { memo } from 'react';
 import type { Card, User } from '@/types';
 import { Avatar } from './Avatar';
 
+export const PRIORITY_LABEL = { HIGH: 'Высокий', MEDIUM: 'Средний', LOW: 'Низкий' } as const;
+
 const PRIORITY = {
   HIGH: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
   MEDIUM: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
@@ -18,15 +20,15 @@ export function CardView({ card, editors, onOpen, overlay }: Props) {
     <div
       onClick={() => onOpen?.(card)}
       className={clsx(
-        'group cursor-grab rounded-xl border bg-white p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing dark:bg-slate-800',
+        'group cursor-grab touch-manipulation select-none rounded-xl border bg-white p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing dark:bg-slate-800',
         editors?.length ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-slate-200 dark:border-slate-700',
         overlay && 'rotate-2 shadow-xl',
       )}
     >
       <p className="text-sm leading-snug font-medium">{card.title}</p>
       <div className="mt-3 flex items-center gap-2">
-        <span className={clsx('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', PRIORITY[card.priority])}>{card.priority}</span>
-        {editors?.length ? <span className="animate-pulse text-[11px] text-brand-500">✏️ {editors[0].name.split(' ')[0]} editing…</span> : null}
+        <span className={clsx('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', PRIORITY[card.priority])}>{PRIORITY_LABEL[card.priority]}</span>
+        {editors?.length ? <span className="animate-pulse text-[11px] text-brand-500">✏️ {editors[0].name.split(' ')[0]} редактирует…</span> : null}
         <span className="flex-1" />
         {card.assignee && <Avatar user={card.assignee} size="sm" />}
       </div>

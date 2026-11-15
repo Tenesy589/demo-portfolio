@@ -1,3 +1,4 @@
+import { HelpComponent } from '../../shared/help.component';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -11,13 +12,13 @@ import { RiskBadgeComponent } from '../../shared/ui';
 
 @Component({
   selector: 'app-customer-detail',
-  imports: [RouterLink, TranslatePipe, CurrencyPipe, DatePipe, DecimalPipe, HasRoleDirective, RiskBadgeComponent],
+  imports: [HelpComponent, RouterLink, TranslatePipe, CurrencyPipe, DatePipe, DecimalPipe, HasRoleDirective, RiskBadgeComponent],
   template: `
     @if (customer.value(); as c) {
       <div class="page-head">
         <div>
           <a routerLink="/customers" class="muted">← {{ 'nav.customers' | t }}</a>
-          <h1>{{ c.name }} <span class="badge" [class]="'status-' + c.status">{{ c.status }}</span></h1>
+          <h1>{{ c.name }} <span class="badge" [class]="'status-' + c.status">{{ 'status.' + c.status | t }}</span></h1>
           <p class="muted">{{ c.company }} · {{ c.region }} · {{ c.email }}</p>
         </div>
         <div class="row">
@@ -26,12 +27,13 @@ import { RiskBadgeComponent } from '../../shared/ui';
         </div>
       </div>
 
+      <app-help key="help.customer" />
       <section class="grid kpis">
         <div class="card kpi"><span class="muted">{{ 'cust.spend' | t }}</span><strong>{{ c.monthly_spend | currency: 'USD' : 'symbol' : '1.0-0' }}</strong></div>
         <div class="card kpi"><span class="muted">{{ 'cust.tenure' | t }}</span><strong>{{ c.tenure_months }}</strong></div>
-        <div class="card kpi"><span class="muted">Plan</span><strong>{{ c.plan }}</strong></div>
-        <div class="card kpi"><span class="muted">NPS</span><strong>{{ c.nps }}/10</strong></div>
-        <div class="card kpi"><span class="muted">Tickets</span><strong>{{ c.support_tickets }}</strong></div>
+        <div class="card kpi"><span class="muted">{{ 'cust.plan' | t }}</span><strong>{{ c.plan }}</strong></div>
+        <div class="card kpi"><span class="muted">{{ 'cust.nps' | t }}</span><strong>{{ c.nps }}/10</strong></div>
+        <div class="card kpi"><span class="muted">{{ 'cust.tickets' | t }}</span><strong>{{ c.support_tickets }}</strong></div>
       </section>
 
       <section class="grid two">
@@ -41,9 +43,9 @@ import { RiskBadgeComponent } from '../../shared/ui';
             <p class="muted">{{ 'cust.drivers' | t }}</p>
             @for (d of p.drivers; track d.feature) {
               <div class="driver">
-                <span>{{ d.feature }} <small class="muted">{{ d.value }} vs {{ d.typical | number: '1.0-0' }}</small></span>
+                <span>{{ 'feat.' + d.feature | t }} <small class="muted">{{ d.value | number: '1.0-0' }} · {{ 'cust.typical' | t }} {{ d.typical | number: '1.0-0' }}</small></span>
                 <div class="bar"><div [class.neg]="d.impact < 0" [style.width.%]="barWidth(d.impact)"></div></div>
-                <small [class.pos]="d.impact > 0">{{ d.impact > 0 ? '+' : '' }}{{ d.impact * 100 | number: '1.0-1' }}pp</small>
+                <small [class.pos]="d.impact > 0">{{ d.impact > 0 ? '+' : '' }}{{ d.impact * 100 | number: '1.0-1' }} {{ 'unit.pp' | t }}</small>
               </div>
             }
           }

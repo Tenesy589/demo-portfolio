@@ -23,7 +23,8 @@ export class KpiComponent {
 
 @Component({
   selector: 'app-risk',
-  template: `<span class="badge" [class]="'risk-' + risk()">{{ (probability() * 100).toFixed(0) }}% · {{ risk() }}</span>`,
+  imports: [TranslatePipe],
+  template: `<span class="badge" [class]="'risk-' + risk()">{{ (probability() * 100).toFixed(0) }}% · {{ 'risk.' + risk() | t }}</span>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RiskBadgeComponent {

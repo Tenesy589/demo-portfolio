@@ -13,18 +13,21 @@ import { I18nService, TranslatePipe } from '../../core/i18n.service';
       <form class="card login" [formGroup]="form" (ngSubmit)="submit()">
         <div class="brand big"><span class="logo">◆</span> AdminHub</div>
         <h1>{{ 'login.title' | t }}</h1>
+        <p class="muted center-text">{{ 'login.subtitle' | t }}</p>
         <label>{{ 'login.email' | t }}<input type="email" formControlName="email" autocomplete="username" /></label>
         <label>{{ 'login.password' | t }}<input type="password" formControlName="password" autocomplete="current-password" /></label>
         @if (error()) { <p class="error">{{ 'login.invalid' | t }}</p> }
         <button class="btn primary" [disabled]="form.invalid || loading()">{{ loading() ? '…' : ('login.submit' | t) }}</button>
+        <p class="muted center-text small">{{ 'login.quick' | t }}</p>
         <div class="demo-users">
           @for (u of demoUsers; track u.email) {
             <button type="button" class="chip" (click)="fill(u.email, u.password)">{{ u.role }}</button>
           }
         </div>
         <div class="seg center">
-          <button type="button" [class.on]="i18n.lang() === 'uk'" (click)="i18n.setLang('uk')">UA</button>
-          <button type="button" [class.on]="i18n.lang() === 'en'" (click)="i18n.setLang('en')">EN</button>
+          @for (l of i18n.langs; track l) {
+            <button type="button" [class.on]="i18n.lang() === l" (click)="i18n.setLang(l)">{{ l === 'uk' ? 'UA' : l.toUpperCase() }}</button>
+          }
         </div>
       </form>
     </div>

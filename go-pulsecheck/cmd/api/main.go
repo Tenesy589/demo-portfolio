@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -54,7 +55,7 @@ func run() error {
 	events := broker.New[store.Result]()
 	sched := scheduler.New(st, history, events, prober)
 
-	api := &httpapi.Server{Store: st, History: history, Events: events, Prober: prober, Scheduler: sched, Static: web.FS(), RPS: cfg.RateLimitRPS}
+	api := &httpapi.Server{Store: st, History: history, Events: events, Prober: prober, Scheduler: sched, Static: web.FS(), RPS: cfg.RateLimitRPS, AdminToken: cfg.AdminToken}
 	srv := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           api.Handler(ctx.Done()),
@@ -98,14 +99,18 @@ func seed(ctx context.Context, st *store.Store, cfg config.Config) {
 		return
 	}
 	defaults := []store.Monitor{
-		{Name: "Flaky demo service", URL: cfg.PublicURL + "/demo/flaky", IntervalSeconds: 5, TimeoutMs: 2000},
-		{Name: "Slow demo service", URL: cfg.PublicURL + "/demo/slow", IntervalSeconds: 10, TimeoutMs: 2000},
+		{Name: "Демо: нестабильный сервис", URL: cfg.PublicURL + "/demo/flaky", IntervalSeconds: 5, TimeoutMs: 2000},
+		{Name: "Демо: медленный сервис", URL: cfg.PublicURL + "/demo/slow", IntervalSeconds: 10, TimeoutMs: 2000},
 		{Name: "GitHub", URL: "https://github.com", IntervalSeconds: 30, TimeoutMs: 5000},
-		{Name: "Cloudflare DNS", URL: "https://1.1.1.1", IntervalSeconds: 30, TimeoutMs: 5000},
-		{Name: "Go website", URL: "https://go.dev", IntervalSeconds: 30, TimeoutMs: 5000},
+		{Name: "Cloudflare", URL: "https://1.1.1.1", IntervalSeconds: 30, TimeoutMs: 5000},
+		{Name: "Сайт языка Go", URL: "https://go.dev", IntervalSeconds: 30, TimeoutMs: 5000},
 	}
-	for _, u := range cfg.SeedURLs {
-		defaults = append(defaults, store.Monitor{Name: u, URL: u, IntervalSeconds: 10, TimeoutMs: 3000})
+	for _, entry := range cfg.SeedURLs { // "Name|url" or just "url"
+		name, u, ok := strings.Cut(entry, "|")
+		if !ok {
+			name, u = entry, entry
+		}
+		defaults = append(defaults, store.Monitor{Name: name, URL: u, IntervalSeconds: 10, TimeoutMs: 3000})
 	}
 	for _, m := range defaults {
 		if _, err := st.CreateMonitor(ctx, m); err != nil {

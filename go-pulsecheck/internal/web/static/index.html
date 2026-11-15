@@ -1,82 +1,123 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PulseCheck</title>
+<title>PulseCheck — мониторинг сайтов</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💓</text></svg>" />
 <style>
-  :root { --bg:#f5f7fa; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --up:#16a34a; --down:#dc2626; --accent:#0ea5e9; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0b1120; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2937; } }
+  :root { --bg:#f5f7fa; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --up:#16a34a; --down:#dc2626; --accent:#0ea5e9; --tint:#f0f9ff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1120; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2937; --tint:#0c1a2b; } }
   * { box-sizing: border-box; }
-  body { margin:0; font:14px/1.5 ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--text); }
-  header { display:flex; align-items:center; gap:12px; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; }
+  body { margin:0; font:15px/1.55 ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; align-items:center; gap:12px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; z-index:2; }
   h1 { font-size:18px; margin:0; } .muted { color:var(--muted); } .spacer { flex:1; }
-  .live { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+  .live { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); white-space:nowrap; }
   .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); } .dot.on { background:var(--up); animation:pulse 1.5s infinite; }
   @keyframes pulse { 50% { opacity:.3; } }
-  main { max-width:1200px; margin:0 auto; padding:24px 16px; display:grid; gap:16px; }
-  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  main { max-width:1100px; margin:0 auto; padding:20px 16px 40px; display:grid; gap:16px; }
   .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
-  .summary strong { display:block; font-size:24px; }
-  form { display:flex; gap:8px; flex-wrap:wrap; }
-  input, button { font:inherit; padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); }
-  input { flex:1 1 220px; } button { background:var(--accent); color:#fff; border:0; cursor:pointer; font-weight:600; }
-  .monitors { display:grid; gap:10px; }
-  .mon { display:grid; grid-template-columns: 14px minmax(140px,1.2fr) 2.5fr repeat(3, 72px) 28px; align-items:center; gap:12px; }
-  .mon .name { overflow:hidden; } .mon .name small { display:block; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  h2 { font-size:16px; margin:0 0 10px; }
+  .help { background:var(--tint); border-color:#bae6fd; }
+  .help p { margin:4px 0; } .help ul { margin:6px 0 0; padding-left:20px; } .help li { margin:3px 0; }
+  .help-close { float:right; background:none; border:0; color:var(--muted); font-size:13px; cursor:pointer; }
+  .legend-bar { display:inline-block; width:8px; height:14px; border-radius:2px; vertical-align:-2px; }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .summary .card span { font-size:13px; } .summary strong { display:block; font-size:24px; }
+  form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  input, button { font:inherit; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); }
+  input { flex:1 1 240px; } button.primary { background:var(--accent); color:#fff; border:0; cursor:pointer; font-weight:600; }
+  .msg { width:100%; font-size:13px; margin:2px 0 0; } .msg.err { color:var(--down); } .msg.ok { color:var(--up); }
+  .head-row, .mon { display:grid; grid-template-columns: 14px minmax(150px,1.3fr) 2.4fr 78px 78px 78px 24px; align-items:center; gap:12px; }
+  .head-row { font-size:12px; color:var(--muted); padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .head-row span { text-align:right; } .head-row span:nth-child(2), .head-row span:nth-child(3) { text-align:left; }
+  .mon { padding:8px 0; border-bottom:1px solid var(--border); } .mon:last-child { border:0; }
+  .mon .name { overflow:hidden; } .mon .name small { display:block; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; }
   .status { width:12px; height:12px; border-radius:50%; background:var(--muted); } .status.up { background:var(--up); } .status.down { background:var(--down); box-shadow:0 0 0 4px #dc262633; }
   .bars { display:flex; gap:2px; height:28px; align-items:flex-end; }
   .bars i { flex:1; min-width:2px; border-radius:2px; background:var(--up); opacity:.85; } .bars i.down { background:var(--down); height:100% !important; }
   .num { text-align:right; font-variant-numeric:tabular-nums; } .num small { display:block; color:var(--muted); font-size:11px; }
-  .del { background:none; color:var(--muted); padding:0; }
-  .incidents li { padding:6px 0; border-bottom:1px solid var(--border); list-style:none; } ul { padding:0; margin:0; }
-  @media (max-width:720px) { .mon { grid-template-columns: 14px 1fr 64px 28px; } .mon .bars, .mon .num:nth-of-type(n+2) { display:none; } }
+  .del { background:none; border:0; color:var(--muted); padding:0; cursor:pointer; font-size:16px; }
+  .incidents li { padding:7px 0; border-bottom:1px solid var(--border); list-style:none; } ul.incidents { padding:0; margin:0; }
+  @media (max-width:760px) {
+    .head-row { display:none; }
+    .mon { grid-template-columns: 14px 1fr 72px 24px; }
+    .mon .bars, .mon .num.lat { display:none; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>💓 PulseCheck</h1><span class="muted">Go · gRPC · goroutines</span><span class="spacer"></span>
-  <span class="live"><span class="dot" id="dot"></span><span id="rate">connecting…</span></span>
+  <h1>💓 PulseCheck</h1><span class="muted" style="font-size:13px">мониторинг доступности сайтов</span><span class="spacer"></span>
+  <span class="live" title="Новые проверки приходят автоматически, обновлять страницу не нужно"><span class="dot" id="dot"></span><span id="live">подключение…</span></span>
 </header>
 <main>
-  <section class="summary">
-    <div class="card"><span class="muted">Monitors</span><strong id="s-total">–</strong></div>
-    <div class="card"><span class="muted">Up</span><strong id="s-up" style="color:var(--up)">–</strong></div>
-    <div class="card"><span class="muted">Down</span><strong id="s-down" style="color:var(--down)">–</strong></div>
-    <div class="card"><span class="muted">Avg latency</span><strong id="s-lat">–</strong></div>
+  <section class="card help" id="help">
+    <button class="help-close" onclick="hideHelp()">скрыть ✕</button>
+    <h2>Как пользоваться</h2>
+    <p>Сервис каждые 5–30 секунд заходит на каждый сайт из списка и проверяет, открывается ли он и как быстро. Если сайт упал, это сразу видно здесь и в списке «Инциденты».</p>
+    <ul>
+      <li><span class="status up" style="display:inline-block"></span> зелёная точка — сайт работает, <span class="status down" style="display:inline-block;box-shadow:none"></span> красная — сайт недоступен.</li>
+      <li>Столбики — последние 60 проверок слева направо: чем выше столбик, тем дольше сайт отвечал. <span class="legend-bar" style="background:var(--down)"></span> красный столбик — проверка не прошла.</li>
+      <li><b>Доступность</b> — процент успешных проверок. <b>Среднее</b> и <b>Медленные</b> — время ответа в миллисекундах (1000 мс = 1 секунда); «медленные» — время, в которое укладываются 95% ответов.</li>
+      <li>Чтобы проверить свой сайт, введите его адрес в поле ниже и нажмите «Добавить» — через несколько секунд появятся первые результаты.</li>
+    </ul>
+    <p class="muted">Два демо-сервиса в списке специально работают со сбоями, чтобы было видно, как выглядят падения и инциденты.</p>
   </section>
+
+  <section class="summary">
+    <div class="card"><span class="muted">Сайтов на проверке</span><strong id="s-total">–</strong></div>
+    <div class="card"><span class="muted">Работают</span><strong id="s-up" style="color:var(--up)">–</strong></div>
+    <div class="card"><span class="muted">Недоступны</span><strong id="s-down" style="color:var(--down)">–</strong></div>
+    <div class="card"><span class="muted">Среднее время ответа</span><strong id="s-lat">–</strong></div>
+  </section>
+
   <form class="card" id="add">
-    <input name="url" placeholder="https://example.com/health" required type="url" />
-    <input name="name" placeholder="Name (optional)" style="flex:0 1 180px" />
-    <input name="interval_seconds" type="number" min="5" value="10" style="flex:0 0 90px" title="Interval, s" />
-    <button>Add monitor</button>
+    <input name="url" placeholder="Адрес сайта, например https://example.com" required />
+    <input name="name" placeholder="Название (необязательно)" style="flex:0 1 220px" />
+    <button class="primary">Добавить сайт</button>
+    <p class="msg" id="add-msg"></p>
   </form>
-  <section class="card monitors" id="monitors"></section>
-  <section class="card"><h3 style="margin-top:0">Incidents</h3><ul class="incidents" id="incidents"></ul></section>
-  <p class="muted" style="text-align:center">Grafana: <a id="grafana-link" href="http://localhost:7106" target="_blank">open</a> · Prometheus metrics: <a href="/metrics">/metrics</a> · Live stream: <a href="/api/events">/api/events</a></p>
+
+  <section class="card">
+    <div class="head-row"><span></span><span>Сайт</span><span>Последние проверки</span><span>Доступность</span><span>Среднее</span><span>Медленные</span><span></span></div>
+    <div id="monitors"><p class="muted">Загрузка…</p></div>
+  </section>
+
+  <section class="card"><h2>Инциденты</h2><p class="muted" style="margin:-4px 0 8px;font-size:13px">Когда сайт перестал отвечать, почему и когда восстановился.</p><ul class="incidents" id="incidents"></ul></section>
 </main>
 <script>
 const $ = (id) => document.getElementById(id);
-if (location.hostname.startsWith('pulse.')) $('grafana-link').href = location.href.replace('//pulse.', '//grafana.').split('?')[0].replace(/\/$/, '');
-const state = { monitors: new Map(), history: new Map() };
+const state = { monitors: new Map(), history: new Map(), admin: false };
+const ADMIN_KEY = 'pulse.adminToken';
 let events = 0;
 
+// ?admin=<token> once → remembered in this browser; enables deleting monitors.
+const urlToken = new URLSearchParams(location.search).get('admin');
+if (urlToken) { try { localStorage.setItem(ADMIN_KEY, urlToken); } catch {} history.replaceState(null, '', location.pathname); }
+const token = () => { try { return localStorage.getItem(ADMIN_KEY) || ''; } catch { return ''; } };
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { ...(opts.headers || {}), 'X-Admin-Token': token() } });
+
+try { if (localStorage.getItem('pulse.helpHidden')) $('help').style.display = 'none'; } catch {}
+function hideHelp() { $('help').style.display = 'none'; try { localStorage.setItem('pulse.helpHidden', '1'); } catch {} }
+
 async function load() {
-  const list = await (await fetch('/api/monitors')).json();
+  state.admin = (await (await api('/api/session')).json()).admin;
+  const list = await (await api('/api/monitors')).json();
   state.monitors = new Map(list.map((m) => [m.id, m]));
   await Promise.all(list.map(async (m) => {
-    const d = await (await fetch(`/api/monitors/${m.id}`)).json();
+    const d = await (await api(`/api/monitors/${m.id}`)).json();
     state.history.set(m.id, d.history ?? []);
   }));
   render();
   loadIncidents();
 }
 
+const time = (iso) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 async function loadIncidents() {
-  const list = await (await fetch('/api/incidents')).json();
+  const list = await (await api('/api/incidents')).json();
   $('incidents').innerHTML = list.length ? list.slice(0, 10).map((i) =>
-    `<li>${i.resolved_at ? '✅' : '🔴'} <b>${esc(i.monitor_name)}</b> — ${esc(i.cause)} <span class="muted">· ${new Date(i.started_at).toLocaleTimeString()}${i.resolved_at ? ' → ' + new Date(i.resolved_at).toLocaleTimeString() : ' (ongoing)'}</span></li>`).join('') : '<li class="muted">No incidents 🎉</li>';
+    `<li>${i.resolved_at ? '✅' : '🔴'} <b>${esc(i.monitor_name)}</b> — ${esc(i.cause)} <span class="muted">· ${time(i.started_at)} → ${i.resolved_at ? time(i.resolved_at) : 'ещё не восстановился'}</span></li>`).join('') : '<li class="muted">Сбоев не было 🎉</li>';
 }
 
 function stats(h) {
@@ -93,41 +134,56 @@ function render() {
     const s = stats(h);
     if (s.last) { s.last.up ? up++ : down++; latSum += s.avg; latN++; }
     const max = Math.max(...h.map((r) => r.latency_ms), 1);
+    const statusText = !s.last ? 'ещё не проверялся' : s.last.up ? 'работает' : 'недоступен: ' + (s.last.error || 'ошибка ' + s.last.status_code);
     return `<div class="mon">
-      <span class="status ${s.last ? (s.last.up ? 'up' : 'down') : ''}" title="${esc(s.last?.error ?? '')}"></span>
+      <span class="status ${s.last ? (s.last.up ? 'up' : 'down') : ''}" title="${esc(statusText)}"></span>
       <span class="name"><b>${esc(m.name)}</b><small>${esc(m.url)}</small></span>
-      <span class="bars">${h.map((r) => `<i class="${r.up ? '' : 'down'}" style="height:${Math.max(8, (r.latency_ms / max) * 100)}%" title="${r.latency_ms} ms · ${r.status_code || r.error}"></i>`).join('')}</span>
-      <span class="num">${s.uptime?.toFixed(1) ?? '–'}%<small>uptime</small></span>
-      <span class="num">${s.avg ?? '–'}<small>avg ms</small></span>
-      <span class="num">${s.p95 ?? '–'}<small>p95 ms</small></span>
-      <button class="del" title="Delete" onclick="del(${m.id})">✕</button>
+      <span class="bars">${h.map((r) => `<i class="${r.up ? '' : 'down'}" style="height:${Math.max(8, (r.latency_ms / max) * 100)}%" title="${new Date(r.checked_at).toLocaleTimeString('ru-RU')} · ${r.up ? r.latency_ms + ' мс' : esc(r.error || 'ошибка ' + r.status_code)}"></i>`).join('')}</span>
+      <span class="num">${s.uptime?.toFixed(1) ?? '–'}%<small>доступность</small></span>
+      <span class="num lat">${s.avg ?? '–'}<small>сред., мс</small></span>
+      <span class="num lat">${s.p95 ?? '–'}<small>медл., мс</small></span>
+      ${state.admin ? `<button class="del" title="Удалить из мониторинга" onclick="del(${m.id})">✕</button>` : '<span></span>'}
     </div>`;
-  }).join('') || '<p class="muted">No monitors yet</p>';
+  }).join('') || '<p class="muted">Список пуст — добавьте первый сайт выше.</p>';
   $('s-total').textContent = state.monitors.size;
   $('s-up').textContent = up;
   $('s-down').textContent = down;
-  $('s-lat').textContent = latN ? Math.round(latSum / latN) + ' ms' : '–';
+  $('s-lat').textContent = latN ? Math.round(latSum / latN) + ' мс' : '–';
 }
 
 function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-async function del(id) { await fetch(`/api/monitors/${id}`, { method: 'DELETE' }); state.monitors.delete(id); render(); }
+async function del(id) {
+  const res = await api(`/api/monitors/${id}`, { method: 'DELETE' });
+  if (res.ok) { state.monitors.delete(id); render(); }
+}
 
+const ERRORS = {
+  'url must be an absolute http(s) URL': 'Введите адрес полностью, например https://example.com',
+  'only public websites can be added': 'Можно добавлять только публичные сайты из интернета',
+  'domain not found': 'Такой домен не найден — проверьте адрес',
+  'monitor with this URL already exists': 'Этот сайт уже есть в списке',
+  'monitor limit reached for the demo': 'В демо достигнут лимит сайтов',
+  'rate limit exceeded': 'Слишком много запросов, попробуйте через минуту',
+};
 $('add').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const msg = $('add-msg'); msg.className = 'msg'; msg.textContent = 'Проверяем адрес…';
   const body = Object.fromEntries(new FormData(e.target));
-  body.interval_seconds = Number(body.interval_seconds);
-  const res = await fetch('/api/monitors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!res.ok) return alert((await res.json()).error);
+  if (!/^https?:\/\//i.test(body.url)) body.url = 'https://' + body.url.trim();
+  body.interval_seconds = 10;
+  const res = await api('/api/monitors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) { const err = (await res.json().catch(() => ({}))).error; msg.className = 'msg err'; msg.textContent = ERRORS[err] || 'Не удалось добавить сайт'; return; }
+  msg.className = 'msg ok'; msg.textContent = 'Добавлено — первые результаты появятся через несколько секунд.';
   e.target.reset(); load();
 });
 
-// Live updates over Server-Sent Events; render at most once per animation frame.
+// Live updates (Server-Sent Events); render at most once per animation frame.
 let pending = false;
 function connect() {
   const es = new EventSource('/api/events');
-  es.onopen = () => $('dot').classList.add('on');
-  es.onerror = () => $('dot').classList.remove('on');
+  es.onopen = () => { $('dot').classList.add('on'); $('live').textContent = 'обновляется онлайн'; };
+  es.onerror = () => { $('dot').classList.remove('on'); $('live').textContent = 'переподключение…'; };
   es.addEventListener('result', (e) => {
     const r = JSON.parse(e.data);
     const h = state.history.get(r.monitor_id) ?? [];
@@ -136,11 +192,9 @@ function connect() {
     state.history.set(r.monitor_id, h);
     if (!state.monitors.has(r.monitor_id)) load();
     if (prev && prev.up !== r.up) loadIncidents();
-    events++;
     if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); }
   });
 }
-setInterval(() => { $('rate').textContent = `${events} checks/10s`; events = 0; }, 10000);
 load().then(connect);
 </script>
 </body>

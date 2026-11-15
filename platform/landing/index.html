@@ -1,122 +1,127 @@
 <!doctype html>
-<html lang="uk">
+<html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DevPlatform</title>
+<title>Демо-проекты</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>" />
 <style>
-  :root { --bg:#f7f7fb; --card:#fff; --text:#12131a; --muted:#646a80; --border:#e4e5ee; --accent:#6d5efc; --up:#16a34a; --down:#dc2626; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0b0c12; --card:#14151f; --text:#ececf4; --muted:#9499ad; --border:#242636; } }
+  :root { --bg:#f7f7fb; --card:#fff; --text:#12131a; --muted:#5d6377; --border:#e4e5ee; --accent:#6d5efc; --up:#16a34a; --down:#dc2626; --tint:#f3f1ff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b0c12; --card:#14151f; --text:#ececf4; --muted:#9499ad; --border:#242636; --tint:#1a1830; } }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.6 ui-sans-serif,system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+  body { margin:0; font:16px/1.6 ui-sans-serif,system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); }
   .wrap { max-width:1120px; margin:0 auto; padding:0 16px; }
-  header { padding:64px 0 32px; }
-  h1 { font-size:clamp(32px,6vw,52px); line-height:1.05; margin:0 0 12px; letter-spacing:-.02em; }
-  h1 span { background:linear-gradient(90deg,var(--accent),#22c1c3); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .lead { color:var(--muted); font-size:18px; max-width:720px; margin:0; }
-  code { background:var(--card); border:1px solid var(--border); padding:2px 8px; border-radius:6px; font-size:14px; }
-  h2 { font-size:22px; margin:48px 0 16px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:10px; transition:transform .15s, box-shadow .15s; }
-  .card:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgb(0 0 0 / 8%); }
-  .card h3 { margin:0; font-size:18px; display:flex; align-items:center; gap:8px; }
-  .card p { margin:0; color:var(--muted); font-size:14px; }
-  .lang { font-size:12px; font-weight:700; padding:2px 8px; border-radius:99px; color:#fff; }
+  header { padding:56px 0 24px; }
+  h1 { font-size:clamp(30px,5.5vw,48px); line-height:1.1; margin:0 0 14px; letter-spacing:-.02em; }
+  h1 span { color:var(--accent); }
+  .lead { color:var(--muted); font-size:18px; max-width:760px; margin:0; }
+  h2 { font-size:22px; margin:40px 0 14px; }
+  .how { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .how div { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; font-size:15px; }
+  .how b { display:block; margin-bottom:2px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:12px; }
+  .card h3 { margin:0; font-size:20px; display:flex; align-items:center; gap:8px; }
+  .card .what { margin:0; font-size:15px; }
+  .card .who { margin:0; font-size:14px; color:var(--muted); }
+  .try { background:var(--tint); border-radius:10px; padding:10px 14px; font-size:14px; }
+  .try ol { margin:4px 0 0; padding-left:18px; } .try li { margin:2px 0; }
+  .login { font-size:13px; color:var(--muted); }
+  .login code { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; color:var(--text); }
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tags span { font-size:12px; border:1px solid var(--border); border-radius:99px; padding:1px 9px; color:var(--muted); }
-  .links { display:flex; gap:12px; margin-top:auto; padding-top:6px; font-size:14px; flex-wrap:wrap; }
-  a { color:var(--accent); text-decoration:none; font-weight:600; }
-  .status { margin-left:auto; width:10px; height:10px; border-radius:50%; background:var(--border); }
-  .status.up { background:var(--up); box-shadow:0 0 0 4px #16a34a22; } .status.down { background:var(--down); }
-  .arch { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; overflow-x:auto; }
-  .arch svg { min-width:760px; width:100%; height:auto; font:13px ui-sans-serif,system-ui; }
-  .arch rect { fill:var(--bg); stroke:var(--border); } .arch .hl { stroke:var(--accent); }
-  .arch text { fill:var(--text); } .arch .sub { fill:var(--muted); font-size:11px; }
-  .arch path { stroke:var(--muted); fill:none; marker-end:url(#arr); } .arch marker path { fill:var(--muted); stroke:none; }
-  footer { color:var(--muted); font-size:13px; padding:48px 0; }
+  .open { margin-top:auto; display:inline-flex; align-self:flex-start; align-items:center; gap:6px; background:var(--accent); color:#fff; border-radius:10px; padding:10px 18px; font-weight:600; text-decoration:none; }
+  .open:hover { filter:brightness(1.08); }
+  .links { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
+  a { color:var(--accent); }
+  .lang { font-size:12px; font-weight:700; padding:2px 8px; border-radius:99px; color:#fff; }
+  .status { margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:var(--muted); }
+  .status i { width:9px; height:9px; border-radius:50%; background:var(--border); }
+  .status.up i { background:var(--up); } .status.down i { background:var(--down); }
+  .api { font-size:14px; color:var(--muted); }
+  footer { color:var(--muted); font-size:13px; padding:40px 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Six projects. <span>One command.</span></h1>
-    <p class="lead">Портфоліо з 6 продакшн-рівня демо-проєктів — Node.js, Python, Go, React, Angular — які працюють окремо або разом як одна платформа. Запуск: <code>docker compose up</code></p>
+    <h1>Демо-проекты: <span>что мы умеем делать</span></h1>
+    <p class="lead">Четыре работающих приложения, которые можно открыть и попробовать прямо сейчас. Это уменьшенные версии систем, которые компании заказывают под себя: таск-трекер, CRM с аналитикой и мониторинг сайтов.</p>
   </header>
 
-  <h2>Проєкти</h2>
-  <div class="grid" id="cards"></div>
-
-  <h2>Архітектура</h2>
-  <div class="arch">
-    <svg viewBox="0 0 900 330" role="img" aria-label="Architecture diagram">
-      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z"/></marker></defs>
-      <rect class="hl" x="350" y="10" width="200" height="44" rx="10"/><text x="450" y="37" text-anchor="middle">Gateway · nginx :7100</text>
-      <rect x="20" y="100" width="190" height="56" rx="10"/><text x="115" y="124" text-anchor="middle">React TaskFlow</text><text class="sub" x="115" y="142" text-anchor="middle">SPA · WebSocket client</text>
-      <rect x="240" y="100" width="190" height="56" rx="10"/><text x="335" y="124" text-anchor="middle">Angular AdminHub</text><text class="sub" x="335" y="142" text-anchor="middle">Signals · RxJS · RBAC</text>
-      <rect x="470" y="100" width="190" height="56" rx="10"/><text x="565" y="124" text-anchor="middle">Go PulseCheck API</text><text class="sub" x="565" y="142" text-anchor="middle">REST · SSE · scheduler</text>
-      <rect x="690" y="100" width="190" height="56" rx="10"/><text x="785" y="124" text-anchor="middle">Grafana</text><text class="sub" x="785" y="142" text-anchor="middle">dashboards</text>
-      <rect x="20" y="200" width="190" height="56" rx="10"/><text x="115" y="224" text-anchor="middle">Node LiveBoard ×2</text><text class="sub" x="115" y="242" text-anchor="middle">NestJS · Socket.IO · BullMQ</text>
-      <rect x="240" y="200" width="190" height="56" rx="10"/><text x="335" y="224" text-anchor="middle">Python InsightAPI</text><text class="sub" x="335" y="242" text-anchor="middle">FastAPI · pandas · sklearn</text>
-      <rect x="470" y="200" width="190" height="56" rx="10"/><text x="565" y="224" text-anchor="middle">Go Prober (gRPC)</text><text class="sub" x="565" y="242" text-anchor="middle">goroutines · bidi stream</text>
-      <rect x="690" y="200" width="190" height="56" rx="10"/><text x="785" y="224" text-anchor="middle">Prometheus</text><text class="sub" x="785" y="242" text-anchor="middle">scrapes all services</text>
-      <rect x="20" y="280" width="190" height="40" rx="10"/><text x="115" y="305" text-anchor="middle">Postgres · Redis · Worker</text>
-      <rect x="240" y="280" width="190" height="40" rx="10"/><text x="335" y="305" text-anchor="middle">Postgres · Redis · Celery</text>
-      <rect x="470" y="280" width="190" height="40" rx="10"/><text x="565" y="305" text-anchor="middle">Postgres</text>
-      <path d="M400 54 L115 98"/><path d="M430 54 L335 98"/><path d="M470 54 L565 98"/><path d="M500 54 L785 98"/>
-      <path d="M115 156 L115 198"/><path d="M335 156 L335 198"/><path d="M565 156 L565 198"/><path d="M785 156 L785 198"/>
-      <path d="M115 256 L115 278"/><path d="M335 256 L335 278"/><path d="M565 256 L565 278"/>
-      <path d="M660 228 L688 228"/>
-    </svg>
+  <h2>Как посмотреть</h2>
+  <div class="how">
+    <div><b>1. Выберите проект</b>Нажмите «Открыть» на карточке ниже.</div>
+    <div><b>2. Войдите</b>Логин и пароль уже подставлены — просто нажмите «Войти».</div>
+    <div><b>3. Следуйте подсказкам</b>На каждой странице есть блок «Как пользоваться».</div>
+    <div><b>Можно смело нажимать</b>Это демо: изменения ни на что не влияют.</div>
   </div>
 
-  <footer>PulseCheck моніторить кожен сервіс платформи — індикатори на картках оновлюються наживо.</footer>
+  <h2>Проекты</h2>
+  <div class="grid" id="cards"></div>
+
+  <footer>Зелёная точка на карточке означает, что приложение работает прямо сейчас — это проверяет наш сервис мониторинга PulseCheck.</footer>
 </div>
 <script>
 const P = location.port ? ':' + location.port : '';
-// Same page works locally (taskflow.localhost:7100) and in production (taskflow.demo.example.com).
+// The same page works locally (taskflow.localhost:7100) and in production (taskflow.demo.glowly.uz).
 const sub = (name) => `${location.protocol}//${name}.${location.hostname}${P}`;
-const LOCAL = location.hostname === 'localhost';
+
 const projects = [
-  { id: 'liveboard', name: 'LiveBoard', lang: 'Node.js', color: '#3c873a', desc: 'Real-time Kanban бекенд: WebSocket, горизонтальне масштабування через Redis, черги задач, стрімінг.',
-    tags: ['NestJS', 'Socket.IO', 'Redis adapter', 'BullMQ', 'Prisma', 'Streams'], health: 'liveboard-lb/health',
-    links: [['Swagger', sub('liveboard') + '/docs'], [':7101', 'http://localhost:7101/docs']] },
-  { id: 'insight', name: 'InsightAPI', lang: 'Python', color: '#3776ab', desc: 'CRM + аналітика + ML: pandas-когорти, прогноз виручки, модель відтоку з поясненнями, Celery.',
-    tags: ['FastAPI', 'pandas', 'scikit-learn', 'Celery', 'SQLAlchemy 2', 'asyncio'], health: 'insight-api:8000/health',
-    links: [['Swagger', sub('insight') + '/docs'], [':7103', 'http://localhost:7103/docs']] },
-  { id: 'pulse', name: 'PulseCheck', lang: 'Go', color: '#00add8', desc: 'Високонавантажений моніторинг: goroutines, bidi gRPC stream, SSE, Prometheus. Образ ~15 MB зі scratch.',
-    tags: ['gRPC', 'goroutines', 'channels', 'SSE', 'Prometheus', 'cobra CLI'], health: 'pulse-grafana:3000/api/health',
-    links: [['Dashboard', sub('pulse') + ''], ['Grafana', sub('grafana') + ''], [':7105', 'http://localhost:7105']] },
-  { id: 'taskflow', name: 'TaskFlow', lang: 'React', color: '#149eca', desc: 'Kanban з drag & drop, optimistic UI, live-синхронізацією, presence і «хто редагує».',
-    tags: ['React 19', 'TanStack Query', 'Zustand', 'dnd-kit', 'Tailwind 4', 'Vite'], health: 'taskflow-web/',
-    links: [['Відкрити', sub('taskflow') + ''], [':7102', 'http://localhost:7102']] },
-  { id: 'adminhub', name: 'AdminHub', lang: 'Angular', color: '#dd0031', desc: 'Enterprise адмінка: zoneless + Signals, RxJS, складні типізовані форми, ролі, i18n UA/EN.',
-    tags: ['Angular 20', 'Signals', 'RxJS', 'Reactive Forms', 'Guards', 'Chart.js'], health: 'adminhub-web/',
-    links: [['Відкрити', sub('admin') + ''], [':7104', 'http://localhost:7104']] },
-  { id: 'platform', name: 'DevPlatform', lang: 'DevOps', color: '#6d5efc', desc: 'Все разом: Compose include, nginx gateway, єдиний моніторинг, CI на GitHub Actions.',
-    tags: ['Docker Compose', 'nginx', 'Prometheus', 'Grafana', 'GitHub Actions'], health: null, links: [] },
+  { id: 'taskflow', name: 'TaskFlow', lang: 'React + Node.js', color: '#149eca', url: sub('taskflow'),
+    what: 'Доска задач для команды, как Trello: карточки перетаскиваются между колонками, а изменения сразу видят все участники.',
+    who: 'Для кого: студии, агентства, отделы компании, которым нужен свой таск-трекер.',
+    try: ['Перетащите карточку в другую колонку.', 'Откройте ту же доску на телефоне — изменения появятся мгновенно.', 'Нажмите на карточку и измените исполнителя.'],
+    login: 'demo@liveboard.dev / demo1234',
+    tags: ['React', 'Node.js', 'WebSocket', 'PostgreSQL', 'Redis'], health: 'taskflow-web/' },
+  { id: 'adminhub', name: 'AdminHub', lang: 'Angular + Python', color: '#dd0031', url: sub('admin'),
+    what: 'CRM для отдела продаж и руководства: база клиентов, дашборд с выручкой и прогнозом, и искусственный интеллект, который предсказывает, какие клиенты скоро уйдут.',
+    who: 'Для кого: интернет-магазины, сервисы по подписке, банки, любые компании с постоянными клиентами.',
+    try: ['Посмотрите дашборд и прогноз выручки.', 'Откройте клиента из списка «под риском» — там видно, почему он может уйти.', 'В «Прогнозе оттока» подвигайте ползунки.', 'Войдите как «viewer» — кнопки редактирования исчезнут.'],
+    login: 'кнопки admin / manager / viewer на странице входа', loginPlain: true,
+    tags: ['Angular', 'Python', 'машинное обучение', 'аналитика'], health: 'adminhub-web/' },
+  { id: 'pulse', name: 'PulseCheck', lang: 'Go', color: '#00add8', url: sub('pulse'),
+    what: 'Мониторинг сайтов: каждые несколько секунд проверяет, открываются ли сайты и как быстро. Если сайт упал — это сразу видно.',
+    who: 'Для кого: интернет-магазины, сервисы доставки и оплаты, веб-студии (как услуга для своих клиентов).',
+    try: ['Добавьте адрес любого сайта — через несколько секунд появятся результаты.', 'Посмотрите на демо-сервисы, которые специально иногда падают.'],
+    login: 'не нужен', loginPlain: true,
+    tags: ['Go', 'gRPC', 'высокая нагрузка'], health: 'liveboard-lb/health' },
 ];
+
 document.getElementById('cards').innerHTML = projects.map((p) => `
   <article class="card">
-    <h3><span class="lang" style="background:${p.color}">${p.lang}</span>${p.name}<span class="status" id="st-${p.id}" title="status"></span></h3>
-    <p>${p.desc}</p>
+    <h3><span class="lang" style="background:${p.color}">${p.lang}</span>${p.name}<span class="status" id="st-${p.id}"><i></i><span>проверяем…</span></span></h3>
+    <p class="what">${p.what}</p>
+    <p class="who">${p.who}</p>
+    <div class="try"><b>Что попробовать:</b><ol>${p.try.map((t) => `<li>${t}</li>`).join('')}</ol></div>
+    <div class="login">Вход: ${p.loginPlain ? p.login : `<code>${p.login}</code>`}</div>
     <div class="tags">${p.tags.map((t) => `<span>${t}</span>`).join('')}</div>
-    <div class="links">${p.links.filter(([t]) => LOCAL || !(t.startsWith(':') || t === 'Grafana')).map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t} →</a>`).join('')}</div>
-  </article>`).join('');
+    <a class="open" href="${p.url}" target="_blank" rel="noopener">Открыть ${p.name} →</a>
+  </article>`).join('') + `
+  <article class="card">
+    <h3><span class="lang" style="background:#6d5efc">API</span>Для технических специалистов</h3>
+    <p class="what">Серверная часть проектов с интерактивной документацией: каждый запрос можно выполнить прямо в браузере.</p>
+    <div class="links">
+      <a href="${sub('liveboard')}/docs" target="_blank" rel="noopener">LiveBoard API (Node.js) →</a>
+      <a href="${sub('insight')}/docs" target="_blank" rel="noopener">InsightAPI (Python) →</a>
+    </div>
+    <p class="api">Все проекты запускаются одной командой в Docker и работают на одном сервере рядом с другими приложениями.</p>
+  </article>`;
 
 async function refresh() {
   try {
     const monitors = await (await fetch('/status')).json();
     for (const p of projects) {
       const el = document.getElementById('st-' + p.id);
-      if (!p.health) { el.className = 'status up'; continue; }
-      const m = monitors.find((m) => m.url.includes(p.health));
-      el.className = 'status ' + (m?.last ? (m.last.up ? 'up' : 'down') : '');
-      el.title = m?.last ? `${m.last.up ? 'UP' : 'DOWN'} · ${m.last.latency_ms} ms · uptime ${m.uptime_pct.toFixed(1)}%` : 'no data';
+      // PulseCheck itself is up if it answered this request at all.
+      const m = p.id === 'pulse' ? { last: { up: true } } : monitors.find((m) => m.url.includes(p.health));
+      const up = m?.last?.up;
+      el.className = 'status ' + (m?.last ? (up ? 'up' : 'down') : '');
+      el.lastElementChild.textContent = m?.last ? (up ? 'работает' : 'недоступен') : 'проверяем…';
     }
   } catch {}
 }
-refresh(); setInterval(refresh, 5000);
+refresh(); setInterval(refresh, 10000);
 </script>
 </body>
 </html>
