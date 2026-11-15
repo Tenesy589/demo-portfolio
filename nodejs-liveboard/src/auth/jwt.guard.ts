@@ -15,7 +15,7 @@ export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionConte
 export class JwtGuard implements CanActivate {
   constructor(private readonly auth: AuthService, private readonly reflector: Reflector) {}
 
-  canActivate(ctx: ExecutionContext): boolean {
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (ctx.getType() !== 'http') return true;
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [ctx.getHandler(), ctx.getClass()])) return true;
 
@@ -23,7 +23,7 @@ export class JwtGuard implements CanActivate {
     const [scheme, token] = req.headers.authorization?.split(' ') ?? [];
     if (scheme !== 'Bearer' || !token) throw new UnauthorizedException();
     try {
-      req.user = this.auth.verify(token);
+      req.user = await this.auth.authenticate(token);
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

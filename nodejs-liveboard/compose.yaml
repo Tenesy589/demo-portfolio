@@ -29,14 +29,14 @@ services:
   # One-shot: apply migrations + seed, then exit. API waits for it to succeed.
   liveboard-migrate:
     build: .
-    image: demo/liveboard:latest
+    image: ${IMAGE_PREFIX:-demo}/liveboard:${IMAGE_TAG:-latest}
     environment: *api-env
     command: ["sh", "-c", "npx prisma migrate deploy && node dist/seed.js"]
     depends_on:
       liveboard-db: { condition: service_healthy }
 
   liveboard-api:
-    image: demo/liveboard:latest
+    image: ${IMAGE_PREFIX:-demo}/liveboard:${IMAGE_TAG:-latest}
     environment: *api-env
     deploy:
       replicas: 2 # two instances sharing state via Redis
@@ -45,7 +45,7 @@ services:
       liveboard-redis: { condition: service_healthy }
 
   liveboard-worker:
-    image: demo/liveboard:latest
+    image: ${IMAGE_PREFIX:-demo}/liveboard:${IMAGE_TAG:-latest}
     environment: *api-env
     command: ["node", "dist/worker.js"]
     healthcheck: { disable: true }

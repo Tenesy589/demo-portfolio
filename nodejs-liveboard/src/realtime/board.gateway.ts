@@ -38,9 +38,9 @@ export class BoardGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     this.subscription?.unsubscribe();
   }
 
-  handleConnection(client: ClientSocket) {
+  async handleConnection(client: ClientSocket) {
     try {
-      client.data.user = this.auth.verify(String(client.handshake.auth?.token ?? ''));
+      client.data.user = await this.auth.authenticate(String(client.handshake.auth?.token ?? ''));
       wsConnections.inc();
       client.emit('hello', { instance: config.instanceId });
     } catch {

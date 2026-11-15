@@ -9,14 +9,14 @@ services:
 
   pulse-prober:
     build: { context: ., args: { TARGET: prober } }
-    image: demo/pulse-prober:latest
+    image: ${IMAGE_PREFIX:-demo}/pulse-prober:${IMAGE_TAG:-latest}
     environment:
       GRPC_ADDR: ":9000"
       PROBER_CONCURRENCY: "128"
 
   pulse-api:
     build: { context: ., args: { TARGET: api } }
-    image: demo/pulse-api:latest
+    image: ${IMAGE_PREFIX:-demo}/pulse-api:${IMAGE_TAG:-latest}
     environment:
       HTTP_ADDR: ":8080"
       PROBER_ADDR: pulse-prober:9000
@@ -31,7 +31,7 @@ services:
   # CLI, on demand: docker compose run --rm pulsectl check https://go.dev
   pulsectl:
     build: { context: ., args: { TARGET: pulsectl } }
-    image: demo/pulsectl:latest
+    image: ${IMAGE_PREFIX:-demo}/pulsectl:${IMAGE_TAG:-latest}
     profiles: [cli]
     environment: { PULSE_API: "http://pulse-api:8080", PULSE_PROBER: "pulse-prober:9000" }
 

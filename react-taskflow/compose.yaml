@@ -7,7 +7,7 @@ include:
 services:
   taskflow-web:
     build: .
-    image: demo/taskflow:latest
+    image: ${IMAGE_PREFIX:-demo}/taskflow:${IMAGE_TAG:-latest}
     ports: ["${TASKFLOW_PORT:-7102}:80"]
     depends_on:
       liveboard-lb: { condition: service_started }

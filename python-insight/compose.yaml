@@ -7,7 +7,7 @@ x-env: &env
   DATA_DIR: /data
 
 x-app: &app
-  image: demo/insight:latest
+  image: ${IMAGE_PREFIX:-demo}/insight:${IMAGE_TAG:-latest}
   environment: *env
   volumes: [insight-data:/data] # shared by API (reads model) and worker (writes model, reads uploads)
 

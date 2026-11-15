@@ -7,7 +7,7 @@ include:
 services:
   adminhub-web:
     build: .
-    image: demo/adminhub:latest
+    image: ${IMAGE_PREFIX:-demo}/adminhub:${IMAGE_TAG:-latest}
     ports: ["${ADMINHUB_PORT:-7104}:80"]
     depends_on:
       insight-api: { condition: service_healthy }

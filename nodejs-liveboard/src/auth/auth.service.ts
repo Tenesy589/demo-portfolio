@@ -30,6 +30,18 @@ export class AuthService {
     return { id: sub, email, name };
   }
 
+  /**
+   * A valid signature isn't enough: the account may have been deleted (or the
+   * demo data reset) after the token was issued. Returns the current profile,
+   * or throws so the client is sent back to the login page.
+   */
+  async authenticate(token: string): Promise<AuthUser> {
+    const claims = this.verify(token);
+    const user = await this.prisma.user.findUnique({ where: { id: claims.id }, select: { id: true, email: true, name: true } });
+    if (!user) throw new UnauthorizedException('Account no longer exists');
+    return user;
+  }
+
   private issue(user: AuthUser) {
     return { accessToken: this.jwt.sign({ sub: user.id, email: user.email, name: user.name }), user };
   }

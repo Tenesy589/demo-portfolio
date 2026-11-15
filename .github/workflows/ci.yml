@@ -45,12 +45,13 @@ jobs:
       - run: ruff check app --select E,F,I --ignore E501
       - run: python -c "import app.main"
 
-  # Every image builds; on main they're pushed to GHCR.
+  # Every image builds; on main they're pushed to GHCR, tagged with the commit SHA.
   docker:
     needs: [node, go, python]
     runs-on: ubuntu-latest
     permissions: { contents: read, packages: write }
     strategy:
+      fail-fast: false # one broken image shouldn't hide the state of the others
       matrix:
         include:
           - { name: liveboard, context: nodejs-liveboard }
@@ -61,6 +62,8 @@ jobs:
           - { name: pulse-prober, context: go-pulsecheck, args: "TARGET=prober" }
     steps:
       - uses: actions/checkout@v4
+      # Registry paths must be lowercase; the GitHub username may not be.
+      - run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         if: github.ref == 'refs/heads/main'
@@ -69,7 +72,46 @@ jobs:
         with:
           context: ${{ matrix.context }}
           build-args: ${{ matrix.args }}
+          platforms: linux/amd64
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ github.sha }}
+          tags: ghcr.io/${{ env.OWNER }}/${{ matrix.name }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  # Ships the new images to demo.glowly.uz. Enabled once the repository variable
+  # DEPLOY_ENABLED=true and the DEPLOY_* secrets exist (see deploy/README.md).
+  deploy:
+    needs: docker
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: read }
+    concurrency: { group: deploy-demo, cancel-in-progress: false }
+    environment: { name: demo, url: https://demo.glowly.uz }
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH setup (host key pinned, never trusted on first use)
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Sync compose files and scripts
+        env: { TARGET: "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" }
+        run: |
+          rsync -az --delete --exclude .git --exclude deploy/.env --exclude node_modules ./ "$TARGET:demo/"
+      - name: Pull images and restart
+        env:
+          TARGET: "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          # The registry token goes over stdin: never on a command line, never on disk.
+          printf '%s\n' "$TOKEN" | ssh -o ServerAliveInterval=30 "$TARGET" "demo-deploy ghcr.io/$OWNER $GITHUB_SHA $GITHUB_ACTOR"
+      - name: Smoke test from the internet
+        run: |
+          for u in https://demo.glowly.uz/ https://taskflow.demo.glowly.uz/ https://admin.demo.glowly.uz/ https://pulse.demo.glowly.uz/; do
+            curl -fsS -o /dev/null --retry 5 --retry-delay 3 "$u" && echo "ok $u"
+          done
