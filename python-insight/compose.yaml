@@ -40,7 +40,7 @@ services:
   insight-worker:
     <<: *app
     command: ["celery", "-A", "app.worker", "worker", "--loglevel=INFO", "--concurrency=2"]
-    healthcheck: { test: ["CMD", "celery", "-A", "app.worker", "inspect", "ping", "-t", "5"], interval: 30s, timeout: 10s }
+    healthcheck: { test: ["CMD-SHELL", "celery --broker=$$REDIS_URL inspect ping -d celery@$$HOSTNAME -t 5"], interval: 30s, timeout: 15s, start_period: 30s }
     depends_on:
       insight-redis: { condition: service_healthy }
       insight-migrate: { condition: service_completed_successfully }
