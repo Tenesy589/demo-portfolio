@@ -38,6 +38,9 @@ if [ -n "${IMAGE_PREFIX:-}" ]; then
 fi
 
 compose up -d --no-build --remove-orphans
+# rsync replaces nginx.conf with a new inode; a single-file bind mount keeps the old one,
+# so recreate the gateway (a couple of seconds) to make it read the current config.
+compose up -d --no-build --force-recreate gateway
 
 attempt=0
 until curl -fsS --max-time 5 -o /dev/null http://127.0.0.1:${GATEWAY_PORT:-7100}/; do
