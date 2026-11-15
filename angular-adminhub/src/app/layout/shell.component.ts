@@ -21,7 +21,7 @@ import { HasRoleDirective } from '../shared/has-role.directive';
         <div class="me">
           <div>
             <strong>{{ auth.user()?.name }}</strong>
-            <span class="badge role">{{ auth.user()?.role }}</span>
+            <span class="badge role">{{ 'role.' + auth.user()?.role | t }}</span>
           </div>
           <button class="btn ghost sm" (click)="auth.logout()">{{ 'nav.logout' | t }}</button>
         </div>

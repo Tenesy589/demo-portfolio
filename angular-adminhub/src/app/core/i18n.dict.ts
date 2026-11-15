@@ -3,6 +3,7 @@ export type Lang = 'ru' | 'uk' | 'en';
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  'role.admin': 'Admin', 'role.manager': 'Manager', 'role.viewer': 'Viewer',
   'help.title': 'How to use',
   'help.hide': 'hide ✕',
   'help.show': '? How to use',
@@ -34,6 +35,7 @@ const en: Dict = {
 };
 
 const ru: Dict = {
+  'role.admin': 'Администратор', 'role.manager': 'Менеджер', 'role.viewer': 'Наблюдатель',
   'help.title': 'Как пользоваться',
   'help.hide': 'скрыть ✕',
   'help.show': '? Как пользоваться',
@@ -65,6 +67,7 @@ const ru: Dict = {
 };
 
 const uk: Dict = {
+  'role.admin': 'Адміністратор', 'role.manager': 'Менеджер', 'role.viewer': 'Спостерігач',
   'help.title': 'Як користуватися',
   'help.hide': 'сховати ✕',
   'help.show': '? Як користуватися',

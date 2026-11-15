@@ -22,17 +22,17 @@ import { HasRoleDirective } from '../../shared/has-role.directive';
 
     <div class="card filters">
       <input class="grow" [formControl]="search" [placeholder]="'cust.search' | t" />
-      <select [value]="query().region ?? ''" (change)="setParam('region', $any($event.target).value)">
-        <option value="">{{ 'cust.region' | t }}: {{ 'cust.all' | t }}</option>
-        @for (r of regions; track r) { <option [value]="r">{{ r }}</option> }
+      <select (change)="setParam('region', $any($event.target).value)" [attr.aria-label]="'cust.region' | t">
+        <option value="" [selected]="!query().region">{{ 'cust.region' | t }}: {{ 'cust.all' | t }}</option>
+        @for (r of regions; track r) { <option [value]="r" [selected]="query().region === r">{{ r }}</option> }
       </select>
-      <select [value]="query().segment ?? ''" (change)="setParam('segment', $any($event.target).value)">
-        <option value="">{{ 'cust.segment' | t }}: {{ 'cust.all' | t }}</option>
-        @for (s of ['SMB', 'MidMarket', 'Enterprise']; track s) { <option [value]="s">{{ s }}</option> }
+      <select (change)="setParam('segment', $any($event.target).value)" [attr.aria-label]="'cust.segment' | t">
+        <option value="" [selected]="!query().segment">{{ 'cust.segment' | t }}: {{ 'cust.all' | t }}</option>
+        @for (s of ['SMB', 'MidMarket', 'Enterprise']; track s) { <option [value]="s" [selected]="query().segment === s">{{ s }}</option> }
       </select>
-      <select [value]="query().status ?? ''" (change)="setParam('status', $any($event.target).value)">
-        <option value="">{{ 'cust.status' | t }}: {{ 'cust.all' | t }}</option>
-        @for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s">{{ 'status.' + s | t }}</option> }
+      <select (change)="setParam('status', $any($event.target).value)" [attr.aria-label]="'cust.status' | t">
+        <option value="" [selected]="!query().status">{{ 'cust.status' | t }}: {{ 'cust.all' | t }}</option>
+        @for (s of ['lead', 'active', 'churned']; track s) { <option [value]="s" [selected]="query().status === s">{{ 'status.' + s | t }}</option> }
       </select>
     </div>
 

@@ -20,8 +20,8 @@ import { ToastService } from '../../core/toast.service';
               <td>{{ u.name }}</td>
               <td>{{ u.email }}</td>
               <td>
-                <select [value]="u.role" [disabled]="u.id === auth.user()?.id" (change)="setRole(u.id, $any($event.target).value)">
-                  @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+                <select [disabled]="u.id === auth.user()?.id" (change)="setRole(u.id, $any($event.target).value)" [attr.aria-label]="'users.role' | t">
+                  @for (r of roles; track r) { <option [value]="r" [selected]="r === u.role">{{ 'role.' + r | t }}</option> }
                 </select>
               </td>
             </tr>
