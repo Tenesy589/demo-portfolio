@@ -1,0 +1,16 @@
+{
+  "name": "demo-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser checks run before every handover: npm i && npx playwright install chromium",
+  "scripts": {
+    "walk": "node walk.mjs ./shots localhost:7100 http",
+    "walk:prod": "node walk.mjs ./shots demo.glowly.uz https",
+    "dnd": "node dnd.mjs http://taskflow.localhost:7100",
+    "dnd:prod": "node dnd.mjs https://taskflow.demo.glowly.uz",
+    "selects": "node selects.mjs http://admin.localhost:7100 http://taskflow.localhost:7100",
+    "crud": "node crud.mjs http://taskflow.localhost:7100",
+    "all": "npm run selects && npm run crud && npm run dnd"
+  },
+  "dependencies": { "playwright": "^1" }
+}
